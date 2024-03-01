@@ -62,7 +62,7 @@ class Detector:
     def detect_end(self, road_length):
         cleared_objects = []
         for driver in self._global_objects_list.values():
-            if driver.my_vehicle.x > road_length or driver.my_vehicle.y > road_length:
+            if driver.my_vehicle.x > road_length/2 or driver.my_vehicle.y > road_length/2:
                 cleared_objects.append(driver.object_id)
         return cleared_objects
 

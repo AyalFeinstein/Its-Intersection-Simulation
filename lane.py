@@ -4,8 +4,9 @@ import objects
 from objects import GlobalObjectList
 from generator import Generator
 from road import Road
-from constants import LaneDirection
+from constants import LaneDirection, LINE_WIDTH, LINE_COLOR
 from collision_detector import Detector
+from visuals import Visual
 
 class SanityError(Exception):
     pass
@@ -15,19 +16,20 @@ class Lane:
                  lane_num: int,
                  my_road: Road,
                  width: float,
-                 objects: GlobalObjectList,
+                 global_objects: GlobalObjectList,
                  generator: Generator,
-                 flow_direction: LaneDirection):
+                 flow_direction: LaneDirection,
+                 objects_in_lane: list = []):
         """ objects is the global list of objects """
         # the global object list
         self.road = my_road
         self.width = width
-        self.objects = objects
+        self.objects = global_objects
         self.generator = generator
         self.direction = flow_direction
         self.lane_num = lane_num
         # a list of object identifiers
-        self.objects_in_lane = []
+        self.objects_in_lane = objects_in_lane
 
     def add(self, driver_id: int):
         """ add an object from the global objects list """
@@ -100,12 +102,31 @@ class Lane:
             obj = self.objects[obj_id]
             x = obj.my_vehicle.x
             y = obj.my_vehicle.y
-            if (x > max_x
-            or y > max_y
-            or x < min_x
-            or y < min_y):
+            length = self.road.get_length()
+            if (x > length/2
+            or y > length/2):
                 finished.append(obj_id)
         return finished
+
+    def draw(self):
+        lines = []
+        edge_0_right_x, edge_0_right_y = self.get_position(0)
+        edge_1_left_x, edge_1_left_y = self.get_position(1)
+        edge_1_right_x, edge_1_right_y = self.get_position(1)
+        edge_0_left_x, edge_0_left_y = self.get_position(0)
+        if self.road.get_direction() % 180 == 90:
+            edge_0_left_x -= self.width/2
+            edge_1_left_x -= self.width/2
+            edge_0_right_x += self.width/2
+            edge_1_right_x += self.width/2
+        else:
+            edge_0_left_y -= self.width/2
+            edge_1_left_y -= self.width/2
+            edge_0_right_y += self.width/2
+            edge_1_right_y += self.width/2
+        lines += [Visual(LINE_COLOR, [(edge_0_left_x, edge_0_left_y), (edge_1_left_x, edge_1_left_y), (edge_1_left_x, edge_1_left_y), (edge_0_left_x, edge_0_left_y+1)]),
+                  Visual(LINE_COLOR, [(edge_0_right_x, edge_0_right_y), (edge_1_right_x, edge_1_right_y), (edge_1_right_x, edge_1_right_y), (edge_0_right_x, edge_0_right_y)])]
+        return lines
 
 
 

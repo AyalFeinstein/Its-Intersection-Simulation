@@ -15,12 +15,11 @@ class LaneDirection(Enum):
     BACKWARD = -1
 
 
-
 class Generator:
 
     def __init__(self, objects: GlobalObjectList, settings: Settings, flow_direction: LaneDirection, angle: float = 0):
-        self.objects = objects       # global objects list
-        self.settings = settings              # generator settings
+        self.objects = objects  # global objects list
+        self.settings = settings  # generator settings
         self.flow_direction = flow_direction
         self.angle = angle
 
@@ -28,10 +27,19 @@ class Generator:
         self._next_generation_time = poisson(self._flow)
         self._next_id = 0
         self.__last_speed = None
+        self.__last_generation = None
 
     # TODO: HINT: WRITE TESTS FOR THIS FUNCTION
-    def should_generate(self, timestep):
+    def should_generate(self, timestep, road_length, objects: GlobalObjectList):
         """ Return True if a vehicle should be generated this timestep """
+        if self.__last_generation not in objects.values():
+            self.__last_generation = None
+        if self.__last_generation is None:
+            return True
+        rear_x, rear_y = self.__last_generation.my_vehicle.get_rear()
+        length = self.__last_generation.my_vehicle.length
+        if rear_x - length < -road_length / 2 or rear_y - length < -road_length / 2:
+            return False
         if self._next_generation_time <= timestep:
             new_next_generation_time = poisson(self._flow)
             self._next_generation_time += new_next_generation_time
@@ -43,7 +51,8 @@ class Generator:
         """ Pick a Vehicle's type """
         settings = self.settings['vehicle_distribution']
         the_type = choices([Car, Truck, Motorcycle, Bicycle, Pedestrian],
-            [settings.get('car', 0.0), settings.get('truck', 0.0), settings.get('motorcycle', 0.0), settings.get('bike', 0.0), settings.get('pedestrian', 0.0)])
+                           [settings.get('car', 0.0), settings.get('truck', 0.0), settings.get('motorcycle', 0.0),
+                            settings.get('bike', 0.0), settings.get('pedestrian', 0.0)])
         return the_type[0]
 
     def generate_vehicle(self, x, y, driver_max, road_max, speeding, settings):
@@ -51,11 +60,21 @@ class Generator:
         my_type = self.pick_vehicle_type()
         vehicle_settings = my_type.get_settings(settings)
         length = vehicle_settings['length']
-        speed = Driver.calc_max_possible_speed(int(vehicle_settings['max_speed']), road_max, speeding)
+        if self.__last_generation is Driver:
+            speed = min(Driver.calc_max_possible_speed(int(vehicle_settings['max_speed']), road_max, speeding), self.__last_generation.my_vehicle.speed+self.__last_generation.my_vehicle.acceleration)
+            acceleration = self.__last_generation.my_vehicle.acceleration
+        else:
+            speed = Driver.calc_max_possible_speed(int(vehicle_settings['max_speed']), road_max, speeding)
+            acceleration = 0
+        width = vehicle_settings['width']
 
         return Vehicle(x=x, y=y,
                        length=length, speed=speed,
-                       acceleration=0, max_speed=vehicle_settings['max_speed'], max_acceleration=vehicle_settings['max_acceleration'], max_angle=vehicle_settings['max_angle'], angle=self.angle)
+                       acceleration=acceleration, max_speed=vehicle_settings['max_speed'],
+                       max_acceleration=vehicle_settings['max_acceleration'],
+                       max_angle=vehicle_settings['max_angle'],
+                       angle=self.angle,
+                       width=width)
 
     def init_following_distance(self):
         self.following_distance = randint(2, 7)
@@ -80,13 +99,8 @@ class Generator:
         following_distance = max(following_distance, 0.6)
 
         quality = Quality(speeding=speeding, following_distance=following_distance, attentiveness=attentiveness)
-
-        return Driver(self.objects.get_next_id(), self.generate_vehicle(x0, y0, road_max+speeding, road_max, speeding, settings), visibility,
-                      (endx, endy), quality)
-
-
-
-
-
-
-
+        driver = Driver(self.objects.get_next_id(),
+                        self.generate_vehicle(x0, y0, road_max + speeding, road_max, speeding, settings), visibility,
+                        (endx, endy), quality)
+        self.__last_generation = driver
+        return driver

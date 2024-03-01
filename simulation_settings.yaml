@@ -2,11 +2,11 @@
 #logging level (DEBUG, INFO, WARN, ERROR)
 loglevel: DEBUG
 # time per timestep (seconds)
-timestep: 0.1
+timestep: 0.2
 # number of timesteps to run
-simulation_timesteps: 315300
-# fraction of total length
-visibility: 1.0
+simulation_timesteps: 10000
+# meters visible
+visibility: 1000
 vehicles:
   bicycle:
     length:
@@ -14,27 +14,33 @@ vehicles:
     max_speed:
       10
     max_acceleration:
-      2.5
+      10
     max_angle:
       65
+    width:
+      0.5
   car:
     length:
-      14.7
+      3.75
     max_speed:
       50
     max_acceleration:
       3.13
     max_angle:
       40
+    width:
+      2.5
   truck:
     length:
-      50
+      14.7
     max_speed:
       37
     max_acceleration:
       1.0
     max_angle:
       35
+    width:
+      2.75
   pedestrian:
     length:
       0.2
@@ -44,10 +50,12 @@ vehicles:
       1.2
     max_angle:
       360
+    width:
+      0.3
 
 # all roads meet at an intersection centered at 0,0
 roads:
-  - length: 10000
+  - length: 100
     direction: 0
     speed_limit: 20
     lanes:
@@ -56,7 +64,7 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 600
+          flow: 3
           vehicle_distribution: # must add up to 1.0
             car: 0.9
             bike: 0.0
@@ -76,13 +84,29 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 574
+          flow: 10
           vehicle_distribution: # must add up to 1.0
             car: 0.0
-            bike: 0.5
+            bike: 0.0
             truck: 0.0
             motorcycle: 0.0
-            pedestrian: 0.5
+            pedestrian: 1.0
+          attentiveness:
+            # 1.0 = always attentive, 0.0 = never attentive
+            average: 1
+            width: 0.1
+      - width: 3
+        flow_direction: -1
+        type: motor
+        generator:
+          # unit of time between cars (seconds)
+          flow: 0.1
+          vehicle_distribution: # must add up to 1.0
+            car: 0.0
+            bike: 1.0
+            truck: 0.0
+            motorcycle: 0.0
+            pedestrian: 0.00
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1

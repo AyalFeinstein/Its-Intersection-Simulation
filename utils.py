@@ -1,3 +1,4 @@
+from fractions import Fraction
 from math import sqrt, sin, cos, radians, pow
 from constants import ROUNDING, PI
 
@@ -24,7 +25,7 @@ def quadratic_equation(a, b, c) -> set:
     elif a == 0 and b == 0:
         return set()
     elif a == 0:
-        return set(-c / b)
+        return {-c / b}
     else:
         sl1 = (-b + bsm4ac) / (2 * a)
         sl2 = (-b - sqrt(b * b - 4 * (a*c))) / (2 * a)
@@ -38,10 +39,10 @@ def split_vector(magnitude, angle) -> tuple[float, float]:
 
 
 def dot(x0, y0, x1, y1) -> float:
-    """ dot finds the component of (x1, y1) in the direction of (x0, y0) """
-    if sqrt(x0*x0 + y0*y0) == 0:
+    """ dot finds the component of (x0, y0) in the direction of (x1, y1) """
+    if sqrt(x1*x1 + y1*y1) == 0:
         return 0
-    return (x0 * x1 + y0 * y1)/sqrt(x0*x0 + y0*y0)
+    return (x0 * x1 + y0 * y1)/sqrt(x1*x1 + y1*y1)
 
 
 def pythagorian_thereom(a, b):
@@ -51,3 +52,5 @@ def pythagorian_thereom(a, b):
 def calc_vol_sphere(r):
     return (4/3)*PI*pow(r, 3)
 
+def cal_length_compared_to_screen(ratio: tuple[float, float], length):
+    return length*ratio[0]/ratio[1]

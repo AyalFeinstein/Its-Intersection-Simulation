@@ -1,3 +1,5 @@
+import time
+
 from collision_detector import Detector
 from lane import Lane
 from generator import Generator
@@ -5,9 +7,11 @@ from objects import GlobalObjectList
 from settings import Settings
 import sys
 import logging
-import pygame
 from math import floor
 from road import Road
+from visuals import Window, Visual
+from constants import Ratio
+import pygame
 pygame.init()
 
 
@@ -23,6 +27,7 @@ def main():
     # init your global objects list
     global_objects_list = GlobalObjectList()
     road_list = my_settings['roads']
+    window = Window(global_objects_list)
 
     # init all Roads
     print(road_list)
@@ -46,15 +51,21 @@ def main():
     lanes: list[Lane] = global_objects_list.get_lanes()
     debug = my_settings['loglevel']
     logging.getLogger().setLevel(debug)
+    window = Window(global_objects_list)
 
     for loop in range(total_timesteps):
+        time.sleep(0.5)
+        all_visuals = global_objects_list.draw()
+        for visual in all_visuals:
+            pygame.draw.polygon(window.screen, visual.color, visual.locations)
         the_time = loop * timestep_length
+        window.update(the_time)
         logging.info(f"Starting loop={loop}/{total_timesteps} time={the_time}s")
 
         # generate objects
         for this_lane in lanes:
             road_speed_limit = this_lane.get_speed_limit()
-            if this_lane.generator.should_generate(the_time):
+            if this_lane.generator.should_generate(the_time, this_lane.road.get_length(), global_objects_list):
                 x0, y0 = this_lane.get_position(0)
                 endx, endy = this_lane.get_position(1)
                 new_driver = this_lane.generator.generate(x0, y0, my_settings['visibility'], endx, endy, road_speed_limit, my_settings)
@@ -85,11 +96,14 @@ def main():
         if crashed_ids:
             logging.info(f'Objects {crashed_ids} crashed.\n {[global_objects_list[crashed_id] for crashed_id in crashed_ids]}')
         crashes = floor(crashes)
-        
+        print(f'crashed_ids={crashed_ids}')
+
         finished_ids = crashed_ids
         # remove objects that crashed or move off the board
         for lane in lanes:
             finished_ids += lane.detect_end()
+
+        print(f'finished_ids={finished_ids}')
         # remove objects that move off the board
         for finished_object in finished_ids:
             if finished_object in global_objects_list:
@@ -101,9 +115,9 @@ def main():
                 del global_objects_list[finished_object]
             else:
                 logging.warning(f'Sim is trying to delete an object id={finished_object} that it already deleted. Ignoring it.')
-
     print(f'There were {crashes} crashes.')
     print(f'The following objects crashed:\n{final_crashed_ids}')
+
 
 if __name__ == "__main__":
     main()

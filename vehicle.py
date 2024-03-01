@@ -1,10 +1,11 @@
+import logging
 from dataclasses import dataclass
 from time import sleep
 from enum import Enum
 from math import sin, cos, radians, fabs
 from settings import Settings
 import constants
-from utils import quadratic_equation, cal_distance, cos_degrees, sin_degrees
+from utils import quadratic_equation, cal_distance, cos_degrees, sin_degrees, cal_length_compared_to_screen
 
 
 class Direction(Enum):
@@ -23,7 +24,8 @@ class Vehicle:
                  max_speed: float,
                  max_acceleration: float,
                  max_angle: float,
-                 angle: float = 0):
+                 angle: float = 0,
+                 width: float = 1):
 
         self.x = x
         self.y = y
@@ -35,6 +37,7 @@ class Vehicle:
         self.max_angle = max_angle
         self.turn_signal: Direction = Direction.OFF
         self.angle = angle  # direction you are facing
+        self.width = width
 
     # speed_limit: int
     # turn_signal: str
@@ -55,6 +58,9 @@ class Vehicle:
         self.x, self.y = self.pretend_update(timestep_length)
         self.speed += self.acceleration * timestep_length
         self.speed = max(self.speed, 0)
+        if self.speed < 0:
+            self.speed = 0
+            logging.warning('Speed is negetave.')
 
     def accelerate(self, amount: float):
         """ Changes acceleration positively or negatively """
@@ -88,6 +94,8 @@ class Vehicle:
     def __repr__(self):
         return f'{self.__class__.__name__}: x={self.x} y={self.y}, length={self.length}, speed={self.speed}, acceleration={self.acceleration}, angle={self.angle}'
 
+    def draw(self):
+        length = cal_length_compared_to_screen((NotImplemented, NotImplemented), self.length)
 
 class Pedestrian(Vehicle):
     def __init__(self, x: float, y: float, speed: float, acceleration: float, max_speed: float = 3, length: float = 0.3,

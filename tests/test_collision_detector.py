@@ -104,6 +104,17 @@ class TestRealCases(unittest.TestCase):
         assert 0 not in detected
         assert 1 not in detected
 
+    def test_ended_vehicle(self):
+        gol = GlobalObjectList()
+        gol[0] = Driver(object_id=0, my_vehicle=MockVehicle(x=0, y=11, length=1, angle=0), visibility=2, destination=(4, 4), quality=mock_quality)
+        detected = Detector(gol).detect_end(10)
+        assert 0 in detected
+    def test_not_ended_vehicle(self):
+        gol = GlobalObjectList()
+        gol[0] = Driver(object_id=0, my_vehicle=MockVehicle(x=0, y=11, length=1, angle=0), visibility=2, destination=(4, 4), quality=mock_quality)
+        detected = Detector(gol).detect_end(10)
+        assert 0 in detected
+
 
 if __name__ == '__main__':
     unittest.main()
