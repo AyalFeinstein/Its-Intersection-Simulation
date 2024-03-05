@@ -55,46 +55,46 @@ vehicles:
 
 # all roads meet at an intersection centered at 0,0
 roads:
-#  - length: 100
-#    direction: 0
-#    speed_limit: 20
-#    lanes:
-#      - width: 5
-#        flow_direction: 1
-#        type: motor
-#        generator:
-#          # unit of time between cars (seconds)
-#          flow: 10
-#          vehicle_distribution: # must add up to 1.0
-#            car: 0.9
-#            bike: 0.0
-#            truck: 0.1
-#            motorcycle: 0.0
-#            pedestrian: 0.0
-#          attentiveness:
-#            # 1.0 = always attentive, 0.0 = never attentive
-#            average: 1
-#            width: 0.01
-  - length: 100
-    direction: 90
+  - length: 300
+    direction: 0
     speed_limit: 20
     lanes:
-      - width: 3
-        flow_direction: 90
+      - width: 5
+        flow_direction: 1
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 1.5
+          flow: 2
           vehicle_distribution: # must add up to 1.0
-            car: 0.0
-            bike: 1.0
-            truck: 0.0
+            car: 0.9
+            bike: 0.0
+            truck: 0.1
             motorcycle: 0.0
-            pedestrian: 0.00
+            pedestrian: 0.0
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
-            width: 0.1
+            width: 0.01
+#  - length: 100
+#    direction: 90
+#    speed_limit: 20
+#    lanes:
+#      - width: 3
+#        flow_direction: 90
+#        type: motor
+#        generator:
+#          # unit of time between cars (seconds)
+#          flow: 1.5
+#          vehicle_distribution: # must add up to 1.0
+#            car: 0.0
+#            bike: 1.0
+#            truck: 0.0
+#            motorcycle: 0.0
+#            pedestrian: 0.00
+#          attentiveness:
+#            # 1.0 = always attentive, 0.0 = never attentive
+#            average: 1
+#            width: 0.1
 intersection:
   traffic_control: none
   pedestrian_crossing_mechanism: none

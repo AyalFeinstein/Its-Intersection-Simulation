@@ -129,7 +129,8 @@ class Driver:
             return None
 
         their_new_speed = max(driver.my_vehicle.speed + driver.my_vehicle.acceleration * min_time_to_be_safe, 0)
-        if min_time_to_be_safe <= 0:
+        if ((min_time_to_be_safe <= SAFE_GAP_IN_SECONDS * self.quality.following_distance)
+                or distance_to_intercept < safe_following_distance):
             your_final_speed = 0
         else:
             your_final_speed = their_new_speed
