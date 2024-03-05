@@ -54,7 +54,7 @@ def main():
     window = Window(global_objects_list)
 
     for loop in range(total_timesteps):
-        time.sleep(0.5)
+        time.sleep(0)
         all_visuals = global_objects_list.draw()
         for visual in all_visuals:
             pygame.draw.polygon(window.screen, visual.color, visual.locations)
@@ -104,10 +104,13 @@ def main():
             finished_ids += lane.detect_end()
 
         print(f'finished_ids={finished_ids}')
+        final_crashed = []
         # remove objects that move off the board
         for finished_object in finished_ids:
             if finished_object in global_objects_list:
                 the_object = global_objects_list[finished_object]
+                final_crashed.append(the_object)
+
                 logging.info(f"Object {finished_object} being removed with a length of {the_object.my_vehicle.length} with location ({the_object.my_vehicle.x, the_object.my_vehicle.y}).")
                 for lane in global_objects_list.get_lanes():
                     lane.remove(finished_object)
@@ -116,7 +119,8 @@ def main():
             else:
                 logging.warning(f'Sim is trying to delete an object id={finished_object} that it already deleted. Ignoring it.')
     print(f'There were {crashes} crashes.')
-    print(f'The following objects crashed:\n{final_crashed_ids}')
+    print(f'The following objects crashed:\n{[obj.__str__() for obj in final_crashed]}')
+
 
 
 if __name__ == "__main__":

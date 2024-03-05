@@ -124,23 +124,23 @@ class TestDriverPlan(unittest.TestCase):
     def test_get_time_to_intercept(self):
         me = SimplifiedDriver(0, LookVehicle(x=10, y=0, length=1, speed=5, acceleration=0), Quality())
         drv1 = SimplifiedDriver(1, LookVehicle(x=0, y=0, length=1, speed=5, acceleration=0), Quality())
-        time_to_intercept = me._get_time_to_intercept_following_distance(drv1, safe_following_distance=0)
+        time_to_intercept = me._to_intercept(drv1, safe_following_distance=0)
         print(time_to_intercept)
         assert time_to_intercept is None, "me is in front of drv1"
 
         me = SimplifiedDriver(0, LookVehicle(x=5, y=0, length=1, speed=5, acceleration=0), Quality())
         drv1 = SimplifiedDriver(1, LookVehicle(x=10, y=0, length=1, speed=5, acceleration=0), Quality())
-        time_to_intercept = me._get_time_to_intercept_following_distance(drv1, 0)
+        time_to_intercept = me._to_intercept(drv1, 0)
         assert time_to_intercept is None, "speeds are equal"
 
         me = SimplifiedDriver(0, LookVehicle(x=10, y=0, length=1, speed=5, acceleration=0), Quality())
         drv1 = SimplifiedDriver(1, LookVehicle(x=12, y=0, length=1, speed=10, acceleration=0), Quality())
-        time_to_intercept = me._get_time_to_intercept_following_distance(drv1, 0)
+        time_to_intercept = me._to_intercept(drv1, 0)
         assert time_to_intercept is None, "me.speed < drv1.speed"
 
         me = SimplifiedDriver(0, LookVehicle(x=5, y=0, length=1, speed=5, acceleration=0), Quality())
         drv1 = SimplifiedDriver(1, LookVehicle(x=10, y=0, length=1, speed=0, acceleration=0), Quality())
-        time_to_intercept = me._get_time_to_intercept_following_distance(drv1, 0)
+        time_to_intercept = me._to_intercept(drv1, 0)
         assert time_to_intercept == 1, "me.speed > drv1.speed"
 
     def test_plan_with_just_me(self):

@@ -276,6 +276,9 @@ class Driver:
     def __repr__(self):
         return f"Driver: object_id={self.object_id} destination={self.destination} visibility={self.visibility} quality={self.quality} vehicle={self.my_vehicle}"
 
+    def __str__(self):
+        return f"Driver: object_id={self.object_id} destination={self.destination} visibility={self.visibility} quality={self.quality} vehicle={self.my_vehicle}\n"
+
     # def change_signal(self, direction: vehicle.Direction()):
     # self.turn_signal = direction
     # return self.turn_signal
