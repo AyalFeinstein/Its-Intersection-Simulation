@@ -58,11 +58,20 @@ class Driver:
                 if distance <= self.visibility or distance_to_back <= self.visibility:
                     occupied.append(driver)
         return occupied
-    @staticmethod
-    def get_closest(locations: list, driver):
-        locations.append(driver.my_vehicle.x)
-        locations.append(driver.my_vehicle.get_rear())
-        closest_x = min(locations)
+
+    def get_closest(self, driver):
+        my_front_x, my_front_y = self.my_vehicle.x, self.my_vehicle.y
+        my_rear_x, my_rear_y = self.my_vehicle.get_rear()
+
+        his_front_x, his_front_y = driver.my_vehicle.x, driver.my_vehicle.y
+        his_rear_x, his_rear_y = driver.my_vehicle.get_rear()
+
+        return (
+            min([(my_front_x, my_front_y, his_front_x, his_front_y),
+                 (my_front_x, my_front_y, his_rear_x, his_rear_y),
+                 (my_rear_x, my_rear_y, his_rear_x, his_rear_y),
+                 (my_rear_x, my_rear_y, his_front_x, his_front_y)],
+                key=cal_distance))
   
     def get_safe_following_distance(self):
         return SAFE_GAP_IN_SECONDS * abs(self.my_vehicle.speed) * self.quality.following_distance
@@ -72,10 +81,10 @@ class Driver:
         max_possible_speed = self.get_max_possible_speed(road_limit)
         return (max_possible_speed - self.my_vehicle.speed) / timestep_length - self.my_vehicle.acceleration
 
-    def _get_time_to_intercept_following_distance(self, driver, safe_following_distance: Optional[float]=None) -> Optional[float]:
-        """ Gets the minimum time to enter the safe following distance.
-         1 solution: time to intercept.
-         None: Never crashes"""
+    def _to_intercept(self, driver) -> tuple[Optional[float], float]:
+        """ Gets the minimum time to intercept another driver and the distance to intercept.
+         1 solution: time to intercept, distance.
+         None, distance: Never crashes"""
         my_speed_x, my_speed_y = split_vector(self.my_vehicle.speed, self.my_vehicle.angle)
         my_acceleration_x, my_acceleration_y = split_vector(self.my_vehicle.acceleration, self.my_vehicle.angle)
 
@@ -85,37 +94,28 @@ class Driver:
         his_speed_in_direction_of_my_speed = dot(his_speed_x, his_speed_y, my_speed_x, my_speed_y)
         his_acceleration_in_direction_of_my_acceleration = dot(his_acceleration_x, his_acceleration_y,
                                                                my_acceleration_x, my_acceleration_y)
-        # TODO: use the closest distance, not the front distance
-        distance_in_direction_of_my_speed = dot(driver.my_vehicle.x - self.my_vehicle.x,
-                                                driver.my_vehicle.y - self.my_vehicle.y,
+
+        my_closest_x, my_closest_y, their_closest_x, their_closest_y = self.get_closest(driver)
+        distance_in_direction_of_my_speed = dot(their_closest_x - my_closest_x,
+                                                their_closest_y - my_closest_y,
                                                 my_speed_x, my_speed_y)
-        safe_following_distance = (safe_following_distance if safe_following_distance is not None else self.get_safe_following_distance())
-        times_to_be_safe = quadratic_equation(0.5 * (
+
+        time_to_intercept = quadratic_equation(0.5 * (
                                                       his_acceleration_in_direction_of_my_acceleration - self.my_vehicle.acceleration),
                                               his_speed_in_direction_of_my_speed - self.my_vehicle.speed,
-                                              distance_in_direction_of_my_speed - safe_following_distance)
+                                              distance_in_direction_of_my_speed)
 
-        if not times_to_be_safe:
-            return None
-        return min(times_to_be_safe)
+        if not time_to_intercept:
+            return None, distance_in_direction_of_my_speed
+        return min(time_to_intercept), distance_in_direction_of_my_speed
 
     def _adjust_acceleration_for_other_driver(self, driver):
         # try to find how much we need to slow down in order not to crash with this self
         # I need to check whether I am getting too close to the car in front of me
         safe_following_distance = self.get_safe_following_distance()
-        my_front_x, my_front_y = self.my_vehicle.x, self.my_vehicle.y
-        my_rear_x, my_rear_y = self.my_vehicle.get_rear()
         my_speed_x, my_speed_y = split_vector(self.my_vehicle.speed, self.my_vehicle.angle)
 
-        his_front_x, his_front_y = driver.my_vehicle.x, driver.my_vehicle.y
-        his_rear_x, his_rear_y = driver.my_vehicle.get_rear()
-
-        my_closest_x, my_closest_y, his_closest_x, his_closest_y = (
-            min([(my_front_x, my_front_y, his_front_x, his_front_y),
-                 (my_front_x, my_front_y, his_rear_x, his_rear_y),
-                 (my_rear_x, my_rear_y, his_rear_x, his_rear_y),
-                 (my_rear_x, my_rear_y, his_front_x, his_front_y)],
-                key=cal_distance))
+        my_closest_x, my_closest_y, his_closest_x, his_closest_y = self.get_closest(driver)
 
         distance_x, distance_y = his_closest_x - my_closest_x, his_closest_y - my_closest_y
         distance_in_direction_of_my_speed = dot(distance_x, distance_y, my_speed_x, my_speed_y)
@@ -123,23 +123,23 @@ class Driver:
         if distance_in_direction_of_my_speed <= 0:
             return None
 
-        allowed_distance_to_be_safe = distance_in_direction_of_my_speed - safe_following_distance
-
-        safe_time_to_act = allowed_distance_to_be_safe / self.my_vehicle.speed
-
-        min_time_to_be_safe = self._get_time_to_intercept_following_distance(driver)
+        min_time_to_be_safe, distance_to_intercept = self._to_intercept(driver)
         if min_time_to_be_safe is None:
             # if these will never impact, they make no changes in the plan
             return None
 
-        their_new_speed = driver.my_vehicle.speed + driver.my_vehicle.acceleration * min_time_to_be_safe
+        their_new_speed = max(driver.my_vehicle.speed + driver.my_vehicle.acceleration * min_time_to_be_safe, 0)
         if min_time_to_be_safe <= 0:
             your_final_speed = 0
         else:
             your_final_speed = their_new_speed
 
         speed_diff = your_final_speed - self.my_vehicle.speed
-        accel_change = speed_diff / fabs(safe_time_to_act) - self.my_vehicle.acceleration
+        if min_time_to_be_safe == 0:
+            new_accel = -self.my_vehicle.max_acceleration
+        else:
+            new_accel = speed_diff / fabs(min_time_to_be_safe)
+        accel_change = new_accel - self.my_vehicle.acceleration
         return accel_change
 
     def _get_direction_x_or_y(self):
@@ -202,13 +202,8 @@ class Driver:
             their_y = driver.my_vehicle.y
             # Check if the driver is perpendicular to you
             if self._check_whether_perpendicular(driver):
-                dimention = self._get_direction_x_or_y()
-                their_dimention = driver._get_direction_x_or_y()
-                if their_dimention == 'x':
-                    distance_to_bubble = abs(self.my_vehicle.y)-self.get_safe_following_distance()
-                else:
-                    distance_to_bubble = abs(self.my_vehicle.x)-self.get_safe_following_distance()
-                when_intercept = self._get_time_to_intercept_following_distance(driver)
+                distance_to_bubble = abs(self.my_vehicle.x)-self.get_safe_following_distance()
+                when_intercept = self._to_intercept(driver)
                 accel_change = self._calc_needed_accel_change(when_intercept, distance_to_bubble)
             else:
                 accel_change = self._adjust_acceleration_for_other_driver(driver)
@@ -261,8 +256,14 @@ class Driver:
 
     def draw(self):
         """Width is the width of the lane"""
-        half_length = self.my_vehicle.length/2
-        half_width = self.my_vehicle.width/2
+        if self.my_vehicle.angle % 180 == 90:
+            length = self.my_vehicle.width
+            width = self.my_vehicle.length
+        else:
+            length = self.my_vehicle.length
+            width = self.my_vehicle.width
+        half_length = length/2
+        half_width = width/2
         top_left_x = self.my_vehicle.x+half_length
         bottom_left_x = self.my_vehicle.x-half_length
         top_right_x = self.my_vehicle.x+half_length

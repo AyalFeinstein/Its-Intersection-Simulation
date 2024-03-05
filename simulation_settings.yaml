@@ -4,7 +4,7 @@ loglevel: DEBUG
 # time per timestep (seconds)
 timestep: 0.2
 # number of timesteps to run
-simulation_timesteps: 50
+simulation_timesteps: 400
 # meters visible
 visibility: 1000
 vehicles:
@@ -55,26 +55,26 @@ vehicles:
 
 # all roads meet at an intersection centered at 0,0
 roads:
-  - length: 100
-    direction: 0
-    speed_limit: 20
-    lanes:
-      - width: 5
-        flow_direction: 1
-        type: motor
-        generator:
-          # unit of time between cars (seconds)
-          flow: 10
-          vehicle_distribution: # must add up to 1.0
-            car: 0.9
-            bike: 0.0
-            truck: 0.1
-            motorcycle: 0.0
-            pedestrian: 0.0
-          attentiveness:
-            # 1.0 = always attentive, 0.0 = never attentive
-            average: 1
-            width: 0.01
+#  - length: 100
+#    direction: 0
+#    speed_limit: 20
+#    lanes:
+#      - width: 5
+#        flow_direction: 1
+#        type: motor
+#        generator:
+#          # unit of time between cars (seconds)
+#          flow: 10
+#          vehicle_distribution: # must add up to 1.0
+#            car: 0.9
+#            bike: 0.0
+#            truck: 0.1
+#            motorcycle: 0.0
+#            pedestrian: 0.0
+#          attentiveness:
+#            # 1.0 = always attentive, 0.0 = never attentive
+#            average: 1
+#            width: 0.01
   - length: 100
     direction: 90
     speed_limit: 20

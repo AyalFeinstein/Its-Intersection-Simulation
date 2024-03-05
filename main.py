@@ -54,7 +54,7 @@ def main():
     window = Window(global_objects_list)
 
     for loop in range(total_timesteps):
-        time.sleep(0)
+        time.sleep(0.5)
         all_visuals = global_objects_list.draw()
         for visual in all_visuals:
             pygame.draw.polygon(window.screen, visual.color, visual.locations)
