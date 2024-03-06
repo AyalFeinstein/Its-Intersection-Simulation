@@ -17,6 +17,7 @@ pygame.init()
 
 def main():
     """ To run: main settings_file """
+    final_crashed = []
     final_crashed_ids = []
 
     crashes = 0
@@ -81,13 +82,13 @@ def main():
                     if this_driver.should_plan():
                         visible_objects = this_driver.look(global_objects_list)
                         accel_change = this_driver.plan(visible_objects, road_speed_limit, timestep_length)
-                        assert accel_change <= this_driver.my_vehicle.max_acceleration
                         this_driver.accelerate(accel_change)
+                        logging.debug(f"{this_driver.object_id=} acceleration ={this_driver.my_vehicle.acceleration}")
 
         # updating the map
         for this_driver in global_objects_list.values():
             this_driver.my_vehicle.update(timestep_length)
-            logging.info(f"Updating {this_driver.object_id} to ({this_driver.my_vehicle.x}, {this_driver.my_vehicle.y})")
+            logging.info(f"Updating {this_driver}")
 
         # detect crashes
         crashed_ids = detector.detect_crashes()
@@ -97,6 +98,7 @@ def main():
             logging.info(f'Objects {crashed_ids} crashed.\n {[global_objects_list[crashed_id] for crashed_id in crashed_ids]}')
         crashes = floor(crashes)
         print(f'crashed_ids={crashed_ids}')
+        final_crashed.extend(global_objects_list[crashed_id] for crashed_id in crashed_ids)
 
         finished_ids = crashed_ids
         # remove objects that crashed or move off the board
@@ -104,12 +106,10 @@ def main():
             finished_ids += lane.detect_end()
 
         print(f'finished_ids={finished_ids}')
-        final_crashed = []
         # remove objects that move off the board
         for finished_object in finished_ids:
             if finished_object in global_objects_list:
                 the_object = global_objects_list[finished_object]
-                final_crashed.append(the_object)
 
                 logging.info(f"Object {finished_object} being removed with a length of {the_object.my_vehicle.length} with location ({the_object.my_vehicle.x, the_object.my_vehicle.y}).")
                 for lane in global_objects_list.get_lanes():
@@ -119,7 +119,7 @@ def main():
             else:
                 logging.warning(f'Sim is trying to delete an object id={finished_object} that it already deleted. Ignoring it.')
     print(f'There were {crashes} crashes.')
-    print(f'The following objects crashed:\n{[obj.__str__() for obj in final_crashed]}')
+    print(f'The following objects crashed:\n{final_crashed}')
 
 
 

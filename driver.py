@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from random import randint, random
 from typing import Optional
 from visuals import Visual
-from constants import LaneDirection, ROUNDING, SAFE_GAP_IN_SECONDS, DRIVER_COLOR
+from constants import LaneDirection, ROUNDING, SAFE_GAP_IN_SECONDS, DRIVER_COLOR, MAX_CARE_RANGE, MIN_FOLLOWING_DISTANCE
 from utils import cal_distance, quadratic_equation, split_vector, dot
 from vehicle import Vehicle
 import sys
@@ -74,7 +74,8 @@ class Driver:
                 key=cal_distance))
   
     def get_safe_following_distance(self):
-        return SAFE_GAP_IN_SECONDS * abs(self.my_vehicle.speed) * self.quality.following_distance
+        return min(SAFE_GAP_IN_SECONDS * abs(self.my_vehicle.speed),
+                   self.my_vehicle.length * MIN_FOLLOWING_DISTANCE) * self.quality.following_distance
 
     def _get_desired_acceleration_change(self, road_limit: float, timestep_length: float):
         """ gets to my desired acceleration change """
@@ -105,6 +106,7 @@ class Driver:
                                               his_speed_in_direction_of_my_speed - self.my_vehicle.speed,
                                               distance_in_direction_of_my_speed)
 
+        time_to_intercept = set(t for t in time_to_intercept if t >= 0)
         if not time_to_intercept:
             return None, distance_in_direction_of_my_speed
         return min(time_to_intercept), distance_in_direction_of_my_speed
@@ -124,13 +126,23 @@ class Driver:
             return None
 
         min_time_to_be_safe, distance_to_intercept = self._to_intercept(driver)
-        if min_time_to_be_safe is None:
-            # if these will never impact, they make no changes in the plan
-            return None
+        logging.debug(f"{self.object_id} and {driver.object_id}: {min_time_to_be_safe=} {distance_to_intercept=}")
 
-        their_new_speed = max(driver.my_vehicle.speed + driver.my_vehicle.acceleration * min_time_to_be_safe, 0)
-        if ((min_time_to_be_safe <= SAFE_GAP_IN_SECONDS * self.quality.following_distance)
-                or distance_to_intercept < safe_following_distance):
+        their_new_speed = max(
+            (
+                (driver.my_vehicle.speed + driver.my_vehicle.acceleration * min_time_to_be_safe)
+                if min_time_to_be_safe is not None
+                else driver.my_vehicle.speed),
+            0)
+        if distance_to_intercept < safe_following_distance:
+            your_final_speed = 0
+        elif distance_to_intercept < SAFE_GAP_IN_SECONDS * MAX_CARE_RANGE * self.quality.following_distance * self.my_vehicle.speed:
+            your_final_speed = their_new_speed
+        elif min_time_to_be_safe is None:
+            return None
+        elif min_time_to_be_safe > SAFE_GAP_IN_SECONDS * MAX_CARE_RANGE * self.quality.following_distance:
+            return None
+        elif min_time_to_be_safe <= SAFE_GAP_IN_SECONDS * self.quality.following_distance:
             your_final_speed = 0
         else:
             your_final_speed = their_new_speed
@@ -139,8 +151,9 @@ class Driver:
         if min_time_to_be_safe == 0:
             new_accel = -self.my_vehicle.max_acceleration
         else:
-            new_accel = speed_diff / fabs(min_time_to_be_safe)
+            new_accel = speed_diff / fabs(min_time_to_be_safe or 1.0)  # always change in 1s if no time to intercept
         accel_change = new_accel - self.my_vehicle.acceleration
+        logging.debug(f"{self.object_id} and {driver.object_id}: {their_new_speed=} {your_final_speed=} {new_accel=} {accel_change=}")
         return accel_change
 
     def _get_direction_x_or_y(self):
@@ -210,7 +223,8 @@ class Driver:
                 accel_change = self._adjust_acceleration_for_other_driver(driver)
             if accel_change:
                 changes.append(accel_change)
-        changes = min(changes + [self.my_vehicle.max_acceleration])
+        changes = min(changes)
+        logging.debug(f'{self.object_id=} {changes=}')
         return changes
 
     def get_needed_angle_change(self):
@@ -277,9 +291,6 @@ class Driver:
 
     def __repr__(self):
         return f"Driver: object_id={self.object_id} destination={self.destination} visibility={self.visibility} quality={self.quality} vehicle={self.my_vehicle}"
-
-    def __str__(self):
-        return f"Driver: object_id={self.object_id} destination={self.destination} visibility={self.visibility} quality={self.quality} vehicle={self.my_vehicle}\n"
 
     # def change_signal(self, direction: vehicle.Direction()):
     # self.turn_signal = direction

@@ -58,9 +58,7 @@ class Vehicle:
         self.x, self.y = self.pretend_update(timestep_length)
         self.speed += self.acceleration * timestep_length
         self.speed = max(self.speed, 0)
-        if self.speed < 0:
-            self.speed = 0
-            logging.warning('Speed is negetave.')
+        self.speed = min(self.speed, self.max_speed)
 
     def accelerate(self, amount: float):
         """ Changes acceleration positively or negatively """

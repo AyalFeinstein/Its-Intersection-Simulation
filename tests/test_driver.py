@@ -124,24 +124,31 @@ class TestDriverPlan(unittest.TestCase):
     def test_get_time_to_intercept(self):
         me = SimplifiedDriver(0, LookVehicle(x=10, y=0, length=1, speed=5, acceleration=0), Quality())
         drv1 = SimplifiedDriver(1, LookVehicle(x=0, y=0, length=1, speed=5, acceleration=0), Quality())
-        time_to_intercept = me._to_intercept(drv1, safe_following_distance=0)
-        print(time_to_intercept)
+        time_to_intercept, s = me._to_intercept(drv1)
         assert time_to_intercept is None, "me is in front of drv1"
+        print(s)
+        assert s == -9
 
         me = SimplifiedDriver(0, LookVehicle(x=5, y=0, length=1, speed=5, acceleration=0), Quality())
         drv1 = SimplifiedDriver(1, LookVehicle(x=10, y=0, length=1, speed=5, acceleration=0), Quality())
-        time_to_intercept = me._to_intercept(drv1, 0)
+        time_to_intercept, d = me._to_intercept(drv1)
         assert time_to_intercept is None, "speeds are equal"
+        print(d)
+        assert d == 4
 
         me = SimplifiedDriver(0, LookVehicle(x=10, y=0, length=1, speed=5, acceleration=0), Quality())
         drv1 = SimplifiedDriver(1, LookVehicle(x=12, y=0, length=1, speed=10, acceleration=0), Quality())
-        time_to_intercept = me._to_intercept(drv1, 0)
+        time_to_intercept, d = me._to_intercept(drv1)
+        print(time_to_intercept)
         assert time_to_intercept is None, "me.speed < drv1.speed"
+        assert d == 1
 
         me = SimplifiedDriver(0, LookVehicle(x=5, y=0, length=1, speed=5, acceleration=0), Quality())
         drv1 = SimplifiedDriver(1, LookVehicle(x=10, y=0, length=1, speed=0, acceleration=0), Quality())
-        time_to_intercept = me._to_intercept(drv1, 0)
-        assert time_to_intercept == 1, "me.speed > drv1.speed"
+        time_to_intercept, d = me._to_intercept(drv1)
+        print(time_to_intercept)
+        assert time_to_intercept == 0.8, "me.speed > drv1.speed"
+        assert d == 4
 
     def test_plan_with_just_me(self):
         me = SimplifiedDriver(object_id=0,

@@ -5,6 +5,10 @@ from dataclasses import dataclass
 ROUNDING = 3
 # How many seconds to keep from the car front you
 SAFE_GAP_IN_SECONDS = 3
+# factor of following distance to stop caring about the vehicle in front of you (multiple of safe gap in seconds).
+MAX_CARE_RANGE = 40
+# The minimum distance cars can be from each other (car lengths)
+MIN_FOLLOWING_DISTANCE = 2
 
 
 class LaneDirection(Enum):

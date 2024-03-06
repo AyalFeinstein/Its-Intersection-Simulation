@@ -25,7 +25,7 @@ vehicles:
     max_speed:
       50
     max_acceleration:
-      3.13
+      5.0
     max_angle:
       40
     width:
