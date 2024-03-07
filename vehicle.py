@@ -59,12 +59,14 @@ class Vehicle:
         self.speed += self.acceleration * timestep_length
         self.speed = max(self.speed, 0)
         self.speed = min(self.speed, self.max_speed)
+        self.speed = round(self.speed, constants.ROUNDING)
 
     def accelerate(self, amount: float):
         """ Changes acceleration positively or negatively """
         self.acceleration += amount
         self.acceleration = min(self.acceleration, self.max_acceleration)
         self.acceleration = max(-self.max_acceleration, self.acceleration)
+        self.acceleration = round(self.acceleration, constants.ROUNDING)
 
     def signal(self, direction: Direction):
         """ Changes direction of turn signal """

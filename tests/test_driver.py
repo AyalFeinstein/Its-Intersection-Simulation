@@ -121,6 +121,24 @@ class TestDriverPlan(unittest.TestCase):
         desired_accel = me._get_desired_acceleration_change(20.0, 1.0)
         assert desired_accel == 0, "your speed = desired speed"
 
+    def test_check_when_vehicle_hits_a_location_in_d(self):
+        me = SimplifiedDriver(0, LookVehicle(x=0, y=0, length=1, angle=0, max_acceleration=0, speed=10, max_speed=10, acceleration=0), quality=Quality())
+        drv1 = SimplifiedDriver(1, LookVehicle(x=10, y=0, length=1, angle=0, max_acceleration=0, speed=0, max_speed=10, acceleration=0), quality=Quality())
+        time_to_intercept = me._when_vehicle_hits_a_location_in_d(drv1.my_vehicle.x, 'x')
+        assert time_to_intercept == 1
+
+        time_to_intercept = me._when_vehicle_hits_a_location_in_d(drv1.my_vehicle.x, 'y')
+        print(time_to_intercept)
+        assert time_to_intercept == 0
+
+        me = SimplifiedDriver(0, LookVehicle(x=0, y=4, length=1, angle=0, max_acceleration=0, speed=10, max_speed=10, acceleration=0), quality=Quality())
+        drv1 = SimplifiedDriver(1, LookVehicle(x=5, y=0, length=1, angle=0, max_acceleration=0, speed=0, max_speed=10, acceleration=0), quality=Quality())
+        time_to_intercept = me._when_vehicle_hits_a_location_in_d(drv1.my_vehicle.x, 'x')
+        assert time_to_intercept == 0.5
+
+        time_to_intercept = me._when_vehicle_hits_a_location_in_d(drv1.my_vehicle.x, 'y')
+        assert time_to_intercept is None
+
     def test_get_time_to_intercept(self):
         me = SimplifiedDriver(0, LookVehicle(x=10, y=0, length=1, speed=5, acceleration=0), Quality())
         drv1 = SimplifiedDriver(1, LookVehicle(x=0, y=0, length=1, speed=5, acceleration=0), Quality())

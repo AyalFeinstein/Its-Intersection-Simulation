@@ -4,7 +4,7 @@ from random import randint, random
 from typing import Optional
 from visuals import Visual
 from constants import LaneDirection, ROUNDING, SAFE_GAP_IN_SECONDS, DRIVER_COLOR, MAX_CARE_RANGE, MIN_FOLLOWING_DISTANCE
-from utils import cal_distance, quadratic_equation, split_vector, dot
+from utils import cal_distance, quadratic_equation, split_vector, dot, intervals_overlap
 from vehicle import Vehicle
 import sys
 from math import pow, sqrt, fabs
@@ -72,7 +72,7 @@ class Driver:
                  (my_rear_x, my_rear_y, his_rear_x, his_rear_y),
                  (my_rear_x, my_rear_y, his_front_x, his_front_y)],
                 key=cal_distance))
-  
+
     def get_safe_following_distance(self):
         return min(SAFE_GAP_IN_SECONDS * abs(self.my_vehicle.speed),
                    self.my_vehicle.length * MIN_FOLLOWING_DISTANCE) * self.quality.following_distance
@@ -102,9 +102,9 @@ class Driver:
                                                 my_speed_x, my_speed_y)
 
         time_to_intercept = quadratic_equation(0.5 * (
-                                                      his_acceleration_in_direction_of_my_acceleration - self.my_vehicle.acceleration),
-                                              his_speed_in_direction_of_my_speed - self.my_vehicle.speed,
-                                              distance_in_direction_of_my_speed)
+                his_acceleration_in_direction_of_my_acceleration - self.my_vehicle.acceleration),
+                                               his_speed_in_direction_of_my_speed - self.my_vehicle.speed,
+                                               distance_in_direction_of_my_speed)
 
         time_to_intercept = set(t for t in time_to_intercept if t >= 0)
         if not time_to_intercept:
@@ -153,8 +153,12 @@ class Driver:
         else:
             new_accel = speed_diff / fabs(min_time_to_be_safe or 1.0)  # always change in 1s if no time to intercept
         accel_change = new_accel - self.my_vehicle.acceleration
-        logging.debug(f"{self.object_id} and {driver.object_id}: {their_new_speed=} {your_final_speed=} {new_accel=} {accel_change=}")
+        logging.debug(
+            f"{self.object_id} and {driver.object_id}: {their_new_speed=} {your_final_speed=} {new_accel=} {accel_change=}")
         return accel_change
+
+    def _to_intercept_loc_parallel(self, loc: tuple):
+        cal_distance((self.my_vehicle.x, self.my_vehicle.y, loc[0], loc[1]))
 
     def _get_direction_x_or_y(self):
         if self.my_vehicle.angle % 180 == 90:
@@ -168,29 +172,56 @@ class Driver:
         their_direction = driver._get_direction_x_or_y()
         return my_direction != their_direction
 
+    def _when_vehicle_hits_a_location_in_d(self, position: float, space) -> tuple[Optional[float], float]:
+        """position=my x or y coordinate
+        space=spot in x or y that you want to find the time to
+         d=x or y dimension
+         returns tuple[time, distance]"""
+        loc0 = position
 
-    def _check_when_vehicle_hits_a_location_in_d(self, space, d: str) -> Optional[float]:
-        """ space=spot in x or y that you want to find the time to
-         d=x or y dimension"""
-        if d == "x":
-            loc0 = self.my_vehicle.x
-        elif d == "y":
-            loc0 = self.my_vehicle.y
-        else:
-            logging.error('Direction inputted is not x or y for _check_when_vehicle_hits_a_location_in_d()')
+        distance = space - loc0
         time_to_intercepts = quadratic_equation(0.5 * self.my_vehicle.acceleration, self.my_vehicle.speed, loc0 - space)
-        time_to_intercepts = list(time_to_intercepts)
-        for t in time_to_intercepts:
-            if t < 0:
-                time_to_intercepts.remove(t)
+        time_to_intercepts = set(time_to_intercept for time_to_intercept in time_to_intercepts if time_to_intercept >= 0)
         if not time_to_intercepts:
-            return None
+            return None, distance
         else:
-            return time_to_intercepts[0]
+            return min(time_to_intercepts), distance
 
-    def _calc_needed_accel_change(self, time_to_intercept_bubble, distance):
+    def _to_intercept_perpendicular(self, driver) -> tuple[Optional[float], float, Optional[float]]:
+        """ Returns a tuple[time, distance, when they leave]
+        If they will never intercept, time = None."""
+        my_front = (self.my_vehicle.x, self.my_vehicle.y)
+        my_rear = self.my_vehicle.get_rear()
+
+        their_front = (driver.my_vehicle.x, driver.my_vehicle.y)
+        their_rear = driver.my_vehicle.get_rear()
+
+        if driver.my_vehicle.angle % 180 == 90:
+            their_direction = 1
+            my_direction = 0
+        else:
+            their_direction = 0
+            my_direction = 1
+        your_time_to_intercept_front, your_distance_to_intercept_front = self._when_vehicle_hits_a_location_in_d(my_front[my_direction], their_front[my_direction])
+        your_time_to_intercept_rear, your_distance_to_leave = self._when_vehicle_hits_a_location_in_d(my_rear[my_direction], their_rear[my_direction])
+        their_time_to_intercept_front, their_distance_to_intercept_front = driver._when_vehicle_hits_a_location_in_d(their_front[their_direction], my_front[their_direction])
+        their_time_to_intercept_rear, their_distance_to_leave = driver._when_vehicle_hits_a_location_in_d(their_rear[their_direction], my_rear[their_direction])
+        min_distance = min(your_distance_to_intercept_front, your_distance_to_leave)
+        if (your_time_to_intercept_front is None
+                or their_time_to_intercept_rear is None
+                or your_time_to_intercept_rear is None
+                or their_time_to_intercept_front is None):
+            return None, min_distance, their_time_to_intercept_rear
+        if intervals_overlap(your_time_to_intercept_front, your_time_to_intercept_rear, their_time_to_intercept_front, their_time_to_intercept_rear, SAFE_GAP_IN_SECONDS):
+            return min(their_time_to_intercept_front, your_time_to_intercept_front), min_distance, their_time_to_intercept_rear
+        else:
+            return None, min_distance, their_time_to_intercept_rear
+
+
+    def _calc_needed_accel_change(self, time_to_intercept_bubble, distance, driver):
         """get the needed acceleration_change to not hit bubble"""
         distance_to_bubble = distance - self.get_safe_following_distance()
+        my_closest_x, my_closest_y, their_closest_x, their_closest_y = self.get_closest(driver)
         if time_to_intercept_bubble is None:
             # They will never crash, so you don't need to change the acceleration
             return 0
@@ -216,9 +247,7 @@ class Driver:
             their_y = driver.my_vehicle.y
             # Check if the driver is perpendicular to you
             if self._check_whether_perpendicular(driver):
-                distance_to_bubble = abs(self.my_vehicle.x)-self.get_safe_following_distance()
-                when_intercept = self._to_intercept(driver)
-                accel_change = self._calc_needed_accel_change(when_intercept, distance_to_bubble)
+                accel_change = self._adjust_acceleration_for_other_driver_perpendicular(driver)
             else:
                 accel_change = self._adjust_acceleration_for_other_driver(driver)
             if accel_change:
@@ -235,6 +264,30 @@ class Driver:
         elif self.destination[1] > self.my_vehicle.y or self.destination[0] > self.my_vehicle.x:
             needed_angle_change = 270
         return needed_angle_change
+
+    def _adjust_acceleration_for_other_driver_perpendicular(self, driver):
+        min_time_to_be_safe, distance_to_intercept, their_time_to_leave = self._to_intercept_perpendicular(driver)
+        logging.debug(f"{self.object_id} and {driver.object_id}: {min_time_to_be_safe=} {distance_to_intercept=}")
+        safe_following_distance = self.get_safe_following_distance()
+        my_speed_x, my_speed_y = split_vector(self.my_vehicle.speed, self.my_vehicle.angle)
+
+        my_closest_x, my_closest_y, his_closest_x, his_closest_y = self.get_closest(driver)
+
+        distance_x, distance_y = his_closest_x - my_closest_x, his_closest_y - my_closest_y
+
+        if min_time_to_be_safe is None:
+            return None
+        if distance_to_intercept <= 0:
+            return None
+
+        t = their_time_to_leave+SAFE_GAP_IN_SECONDS
+        new_accel = (2.0/(t*t)) * (distance_to_intercept - self.my_vehicle.speed*t)
+        accel_change = new_accel-self.my_vehicle.acceleration
+        logging.debug(
+            f"{self.object_id} and {driver.object_id}: {self.my_vehicle.speed=} time to modify speed={t} {new_accel=} {accel_change=}")
+
+        return accel_change
+
 
     def check_for_needed_lanes(self, lanes, direction):
         """ Check which lanes go in direction that is the same as the one the self wants to go in.
@@ -277,17 +330,19 @@ class Driver:
         else:
             length = self.my_vehicle.length
             width = self.my_vehicle.width
-        half_length = length/2
-        half_width = width/2
-        top_left_x = self.my_vehicle.x+half_length
-        bottom_left_x = self.my_vehicle.x-half_length
-        top_right_x = self.my_vehicle.x+half_length
-        bottom_right_x = self.my_vehicle.x-half_length
-        top_left_y = self.my_vehicle.y-half_width
-        top_right_y = self.my_vehicle.y+half_width
-        bottom_left_y = self.my_vehicle.y-half_width
-        bottom_right_y = self.my_vehicle.y+half_width
-        return Visual(DRIVER_COLOR, [(top_left_x, top_left_y), (top_right_x, top_right_y), (bottom_right_x, bottom_right_y), (bottom_left_x, bottom_left_y)])
+        half_length = length / 2
+        half_width = width / 2
+        top_left_x = self.my_vehicle.x + half_length
+        bottom_left_x = self.my_vehicle.x - half_length
+        top_right_x = self.my_vehicle.x + half_length
+        bottom_right_x = self.my_vehicle.x - half_length
+        top_left_y = self.my_vehicle.y - half_width
+        top_right_y = self.my_vehicle.y + half_width
+        bottom_left_y = self.my_vehicle.y - half_width
+        bottom_right_y = self.my_vehicle.y + half_width
+        return Visual(DRIVER_COLOR,
+                      [(top_left_x, top_left_y), (top_right_x, top_right_y), (bottom_right_x, bottom_right_y),
+                       (bottom_left_x, bottom_left_y)])
 
     def __repr__(self):
         return f"Driver: object_id={self.object_id} destination={self.destination} visibility={self.visibility} quality={self.quality} vehicle={self.my_vehicle}"

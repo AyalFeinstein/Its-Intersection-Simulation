@@ -53,9 +53,10 @@ def main():
     debug = my_settings['loglevel']
     logging.getLogger().setLevel(debug)
     window = Window(global_objects_list)
+    break_length = my_settings['simulation_speed']
 
     for loop in range(total_timesteps):
-        time.sleep(0.5)
+        time.sleep(break_length)
         all_visuals = global_objects_list.draw()
         for visual in all_visuals:
             pygame.draw.polygon(window.screen, visual.color, visual.locations)
