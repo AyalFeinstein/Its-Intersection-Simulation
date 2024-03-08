@@ -18,6 +18,7 @@ pygame.init()
 def main():
     """ To run: main settings_file """
     throughput = 0
+    throughput_out = 0
     final_crashed = []
     final_crashed_ids = []
 
@@ -107,7 +108,6 @@ def main():
         # remove objects that crashed or move off the board
         for lane in lanes:
             finished_ids += lane.detect_end()
-
         print(f'finished_ids={finished_ids}')
         # remove objects that move off the board
         for finished_object in finished_ids:
@@ -119,13 +119,13 @@ def main():
                     lane.remove(finished_object)
 
                 del global_objects_list[finished_object]
+                throughput_out += 1
             else:
                 logging.warning(f'Sim is trying to delete an object id={finished_object} that it already deleted. Ignoring it.')
+        throughput_out += len(finished_ids)-len(crashed_ids)
     print(f'There were {crashes} crashes.')
     print(f'The following objects crashed:\n{final_crashed}')
-    print(f'{throughput=}')
-
-
+    print(f'{throughput=}\n{throughput_out=}')
 
 if __name__ == "__main__":
     main()

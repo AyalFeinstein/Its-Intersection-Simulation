@@ -68,7 +68,7 @@ vehicles:
 
 # all roads meet at an intersection centered at 0,0
 roads:
-  - length: 300
+  - length: 200
     direction: 90
     speed_limit: 20
     lanes:
@@ -77,7 +77,7 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 3
+          flow: 1
           vehicle_distribution: # must add up to 1.0
             car: 1.0
             bike: 0.0
@@ -87,8 +87,8 @@ roads:
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
-            width: 0.01
-  - length: 300
+            width: 0.3
+  - length: 200
     direction: 0
     speed_limit: 20
     lanes:
@@ -97,7 +97,7 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 3
+          flow: 1
           vehicle_distribution: # must add up to 1.0
             car: 1.0
             bike: 0.0
@@ -107,7 +107,7 @@ roads:
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
-            width: 0.1
+            width: 0.3
 intersection:
   traffic_control: none
   pedestrian_crossing_mechanism: none

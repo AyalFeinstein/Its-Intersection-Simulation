@@ -135,7 +135,7 @@ class Driver:
                 else driver.my_vehicle.speed),
             0)
         if distance_to_intercept < safe_following_distance:
-            your_final_speed = 0
+            return -self.my_vehicle.max_acceleration
         elif distance_to_intercept < SAFE_GAP_IN_SECONDS * MAX_CARE_RANGE * self.quality.following_distance * self.my_vehicle.speed:
             your_final_speed = their_new_speed
         elif min_time_to_be_safe is None:
@@ -143,7 +143,7 @@ class Driver:
         elif min_time_to_be_safe > SAFE_GAP_IN_SECONDS * MAX_CARE_RANGE * self.quality.following_distance:
             return None
         elif min_time_to_be_safe <= SAFE_GAP_IN_SECONDS * self.quality.following_distance:
-            your_final_speed = 0
+            return -self.my_vehicle.max_acceleration
         else:
             your_final_speed = their_new_speed
 
@@ -223,25 +223,6 @@ class Driver:
                        your_time_to_intercept_front), min_distance, their_time_to_intercept_rear, their_distance_to_intercept_front
         else:
             return None, min_distance, their_time_to_intercept_rear, their_distance_to_intercept_front
-
-    def _calc_needed_accel_change(self, time_to_intercept_bubble, distance, driver):
-        """get the needed acceleration_change to not hit bubble"""
-        distance_to_bubble = distance - self.get_safe_following_distance()
-        my_closest_x, my_closest_y, their_closest_x, their_closest_y = self.get_closest(driver)
-        if time_to_intercept_bubble is None:
-            # They will never crash, so you don't need to change the acceleration
-            return 0
-        try:
-            required_speed = distance_to_bubble / time_to_intercept_bubble
-        except ZeroDivisionError:
-            required_speed = 0
-        speed_diff = required_speed - self.my_vehicle.speed
-        try:
-            needed_accel = speed_diff / time_to_intercept_bubble
-        except ZeroDivisionError:
-            needed_accel = -self.my_vehicle.max_acceleration
-        accel_change = needed_accel - self.my_vehicle.acceleration
-        return accel_change
 
     def plan(self, visible_objects, road_limit, timestep_length):
         # the default will be trying to get to my desired acceleration

@@ -19,17 +19,6 @@ def sin_degrees(d: float) -> float:
     return round(sin(radians(d)), ROUNDING)
 
 
-def intervals_overlap(a0, a1, b0, b1, buffer=0.0) -> bool:
-    """ Return true if (a0, a1) and (b0, b1) intervals overlap """
-    i1 = (a0, a1)
-    i2 = (b0, b1)
-    a = (min(i1) - buffer, max(i1) + buffer)
-    b = (min(i2) - buffer, max(i2) + buffer)
-
-    return (a[0] <= b[0] <= a[1]
-            or (b[0] <= a[0] <= b[1]))
-
-
 def quadratic_equation(a, b, c) -> set:
     """ Help solve quadratic equations. """
     bsm4ac = b * b - 4 * (a * c)
@@ -43,6 +32,17 @@ def quadratic_equation(a, b, c) -> set:
         sl1 = (-b + sqrt(bsm4ac)) / (2 * a)
         sl2 = (-b - sqrt(bsm4ac)) / (2 * a)
         return {sl1, sl2}
+
+
+def intervals_overlap(a0, a1, b0, b1, buffer=0.0) -> bool:
+    """ Return true if (a0, a1) and (b0, b1) intervals overlap """
+    i1 = (a0, a1)
+    i2 = (b0, b1)
+    a = (min(i1) - buffer, max(i1) + buffer)
+    b = (min(i2) - buffer, max(i2) + buffer)
+
+    return (a[0] <= b[0] <= a[1]
+            or (b[0] <= a[0] <= b[1]))
 
 
 def split_vector(magnitude, angle) -> tuple[float, float]:
