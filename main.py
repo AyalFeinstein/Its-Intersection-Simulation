@@ -17,6 +17,7 @@ pygame.init()
 
 def main():
     """ To run: main settings_file """
+    throughput = 0
     final_crashed = []
     final_crashed_ids = []
 
@@ -74,6 +75,7 @@ def main():
                 global_objects_list[new_driver.object_id] = new_driver
                 this_lane.add(new_driver.object_id)
                 logging.info(f"Generating a vehicle={new_driver.object_id} in lane={this_lane} position=({x0}, {y0}), destination=({endx}, {endy}) of type {new_driver.my_vehicle}")
+                throughput += 1
 
         # plan next steps
         for this_driver in global_objects_list.values():
@@ -121,6 +123,7 @@ def main():
                 logging.warning(f'Sim is trying to delete an object id={finished_object} that it already deleted. Ignoring it.')
     print(f'There were {crashes} crashes.')
     print(f'The following objects crashed:\n{final_crashed}')
+    print(f'{throughput=}')
 
 
 

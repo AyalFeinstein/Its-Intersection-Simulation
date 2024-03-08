@@ -9,6 +9,9 @@ SAFE_GAP_IN_SECONDS = 3
 MAX_CARE_RANGE = 40
 # The minimum distance cars can be from each other (car lengths)
 MIN_FOLLOWING_DISTANCE = 2
+# the multiple of following distance for perpendicular drivers.
+PERPENDICULAR_FOLLOWING_DISTANCE = 3
+
 
 
 class LaneDirection(Enum):
