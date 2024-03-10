@@ -239,6 +239,32 @@ class TestDriverPlan(unittest.TestCase):
         direction = me._get_direction_x_or_y()
         assert direction == 'x'
 
+    def test_to_intercept(self):
+        me = SimplifiedDriver(object_id=0,
+                              my_vehicle=LookVehicle(x=1, y=0, length=1, angle=0, max_acceleration=5, speed=1,
+                                                     max_speed=45, acceleration=0),
+                              quality=Quality(speeding=1.0, following_distance=1.0, attentiveness=1.0))
+        drv1 = SimplifiedDriver(object_id=0,
+                              my_vehicle=LookVehicle(x=5, y=0, length=1, angle=0, max_acceleration=5, speed=0,
+                                                     max_speed=45, acceleration=0),
+                              quality=Quality(speeding=1.0, following_distance=1.0, attentiveness=1.0))
+        time, distance = me._to_intercept(drv1)
+        assert time == 3
+        assert distance == 3
+
+    def test_to_intercept_w_accel(self):
+        me = SimplifiedDriver(object_id=0,
+                              my_vehicle=LookVehicle(x=1, y=0, length=1, angle=0, max_acceleration=5, speed=1,
+                                                     max_speed=45, acceleration=1),
+                              quality=Quality(speeding=1.0, following_distance=1.0, attentiveness=1.0))
+        drv1 = SimplifiedDriver(object_id=0,
+                              my_vehicle=LookVehicle(x=5, y=0, length=1, angle=0, max_acceleration=5, speed=0,
+                                                     max_speed=45, acceleration=0),
+                              quality=Quality(speeding=1.0, following_distance=1.0, attentiveness=1.0))
+        time, distance = me._to_intercept(drv1)
+        print(time)
+        assert time == 1.6457513110645907
+        assert distance == 3
 
 if __name__ == '__main__':
     unittest.main()
