@@ -2,6 +2,7 @@ import time
 
 from constants import Ratio, Visual, LINE_WIDTH, ROAD_COLOR, WINDOW_WIDTH, WINDOW_HEIGHT
 from visuals import Visual
+from settings import Settings
 
 class Road:
     """ Roads always center at (0,0).
@@ -24,6 +25,10 @@ class Road:
         for lane in objects.get_lanes_by_road(self):
             width += lane.width
         return width
+
+    def get_green_time(self, road_num):
+        return Settings['roads'][road_num]['green_time']
+
 
     def get_length(self):
         return self._length

@@ -1,4 +1,6 @@
 from dataclasses import dataclass, field
+from typing import Optional
+
 import driver
 import objects
 from objects import GlobalObjectList
@@ -7,6 +9,8 @@ from road import Road
 from constants import LaneDirection, LINE_WIDTH, LINE_COLOR
 from collision_detector import Detector
 from visuals import Visual
+from signal import TrafficLight, StopSign
+from typing import Optional
 
 class SanityError(Exception):
     pass
@@ -19,7 +23,8 @@ class Lane:
                  global_objects: GlobalObjectList,
                  generator: Generator,
                  flow_direction: LaneDirection,
-                 objects_in_lane: list = []):
+                 objects_in_lane: list = [],
+                 traffic_light: Optional[TrafficLight] = None):
         """ objects is the global list of objects """
         # the global object list
         self.road = my_road
@@ -30,6 +35,7 @@ class Lane:
         self.lane_num = lane_num
         # a list of object identifiers
         self.objects_in_lane = objects_in_lane
+        self.traffic_light = traffic_light
 
     def add(self, driver_id: int):
         """ add an object from the global objects list """
@@ -109,7 +115,7 @@ class Lane:
         return finished
 
     def draw(self):
-        lines = []
+        drawings = []
         edge_0_right_x, edge_0_right_y = self.get_position(0)
         edge_1_left_x, edge_1_left_y = self.get_position(1)
         edge_1_right_x, edge_1_right_y = self.get_position(1)
@@ -124,9 +130,18 @@ class Lane:
             edge_1_left_y -= self.width/2
             edge_0_right_y += self.width/2
             edge_1_right_y += self.width/2
-        lines += [Visual(LINE_COLOR, [(edge_0_left_x, edge_0_left_y), (edge_1_left_x, edge_1_left_y), (edge_1_left_x, edge_1_left_y), (edge_0_left_x, edge_0_left_y+1)]),
+        drawings += [Visual(LINE_COLOR, [(edge_0_left_x, edge_0_left_y), (edge_1_left_x, edge_1_left_y), (edge_1_left_x, edge_1_left_y), (edge_0_left_x, edge_0_left_y+1)]),
                   Visual(LINE_COLOR, [(edge_0_right_x, edge_0_right_y), (edge_1_right_x, edge_1_right_y), (edge_1_right_x, edge_1_right_y), (edge_0_right_x, edge_0_right_y)])]
-        return lines
+        return drawings
 
+    def update(self, the_time):
+        if not self.traffic_light:
+            pass
+        road_num = self.objects.get_road_num(self.road)
+        green_time = self.road.get_green_time(road_num)
+        if the_time % green_time == 0:
+            self.traffic_light.change_color(the_time)
+        if self.traffic_light.yellow_time == the_time:
+            self.traffic_light.change_color(the_time)
 
 

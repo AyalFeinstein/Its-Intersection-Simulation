@@ -27,6 +27,13 @@ class GlobalObjectList(dict):
         self._next_id += 1
         return self._next_id
 
+    def get_road_num(self, road):
+        counter = -1
+        for r in self._roads:
+            counter += 1
+            if r is road:
+                return counter
+
     def add_road(self, road):
         self._roads.append(road)
         self._max_length = max(self._max_length, road.get_length())

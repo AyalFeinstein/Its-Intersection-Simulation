@@ -55,6 +55,11 @@ class Vehicle:
 
     def update(self, timestep_length: float):
         """ Changes the x and y of the vehicle in question as well as changing the speed """
+        if self.speed < 0:
+            raise ValueError('Speed must be more then or equal to 0')
+        if self.acceleration < 0:
+            time_to_stop = -self.speed/self.acceleration
+            timestep_length = min(time_to_stop, timestep_length)
         self.x, self.y = self.pretend_update(timestep_length)
         self.speed += self.acceleration * timestep_length
         self.speed = max(self.speed, 0)

@@ -69,6 +69,7 @@ def main():
         # generate objects
         for this_lane in lanes:
             road_speed_limit = this_lane.get_speed_limit()
+            # this_lane.update(the_time)
             if this_lane.generator.should_generate(the_time, this_lane.road.get_length(), global_objects_list):
                 x0, y0 = this_lane.get_position(0)
                 endx, endy = this_lane.get_position(1)
