@@ -1,6 +1,6 @@
 # what are all possible simulation settings that you want to handle?
 #logging level (DEBUG, INFO, WARN, ERROR)
-loglevel: DEBUG
+loglevel: WARN
 # time per timestep (seconds)
 timestep: 0.2
 # number of timesteps to run
@@ -77,13 +77,13 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 0.01
+          flow: 2
           vehicle_distribution: # must add up to 1.0
             car: 0.0
             bike: 0.0
             truck: 0.0
-            motorcycle: 0.0
-            pedestrian: 1.0
+            motorcycle: 1.0
+            pedestrian: 0.0
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
@@ -101,7 +101,7 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 0.5
+          flow: 1
           vehicle_distribution: # must add up to 1.0
             car: 1.0
             bike: 0.0

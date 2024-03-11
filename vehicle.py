@@ -45,6 +45,9 @@ class Vehicle:
     # wheel: int
 
     def pretend_update(self, timestep: float):
+        if self.acceleration < 0:
+            time_to_stop = -self.speed/self.acceleration
+            timestep = min(time_to_stop, timestep)
         speed_x = cos_degrees(self.angle)*self.speed
         speed_y = sin_degrees(self.angle)*self.speed
         acceleration_x = cos_degrees(self.angle)*self.acceleration

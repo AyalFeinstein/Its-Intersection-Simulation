@@ -78,6 +78,25 @@ class TestVehicle(unittest.TestCase):
         assert me.x == 0.25
         assert me.y == 0
 
+    def test_pretend_update(self):
+        me = Vehicle(x=0, y=0, length=1, speed=0, acceleration=0, max_speed=10, max_acceleration=10, max_angle=90,
+                     angle=0, width=1)
+        x, y = me.pretend_update(1)
+        assert x == 0
+        assert y == 0
+
+        me = Vehicle(x=0, y=1, length=1, speed=1, acceleration=0, max_speed=10, max_acceleration=10, max_angle=90,
+                     angle=0, width=1)
+        x, y = me.pretend_update(1)
+        assert x == 1
+        assert y == 1
+
+        me = Vehicle(x=0, y=0, length=1, speed=2, acceleration=0, max_speed=10, max_acceleration=10, max_angle=90,
+                     angle=270, width=1)
+        x, y = me.pretend_update(1)
+        assert x == 0
+        assert y == -2
+
     def test_get_rear_with_length_3_and_angle_270(self):
         me = self.GetRearMockVehicle(0, 0, 3, 270)
         back = me.get_rear()
