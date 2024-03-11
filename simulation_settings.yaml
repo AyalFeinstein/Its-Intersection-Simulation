@@ -109,7 +109,7 @@ roads:
             motorcycle: 0.0
             pedestrian: 0.00
           attentiveness:
-            # 1.0 = always attentive, 0.0 = never attentivepower
+            # 1.0 = always attentive, 0.0 = never attentive
             average: 1
             width: 0.01
     traffic_light: True

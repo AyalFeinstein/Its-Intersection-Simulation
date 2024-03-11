@@ -62,7 +62,7 @@ class Generator:
         length = vehicle_settings['length']
         if self.__last_generation is not None:
             speed = min(Driver.calc_max_possible_speed(int(vehicle_settings['max_speed']), road_max, speeding), self.__last_generation.my_vehicle.speed)
-            acceleration = self.__last_generation.my_vehicle.acceleration
+            acceleration = max(min(self.__last_generation.my_vehicle.acceleration, 0), -vehicle_settings['max_acceleration'])
         else:
             speed = Driver.calc_max_possible_speed(int(vehicle_settings['max_speed']), road_max, speeding)
             acceleration = 0

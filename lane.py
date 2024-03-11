@@ -13,8 +13,10 @@ from signal import TrafficLight, StopSign
 from typing import Optional
 import logging
 
+
 class SanityError(Exception):
     pass
+
 
 class Lane:
     def __init__(self,
@@ -24,7 +26,7 @@ class Lane:
                  global_objects: GlobalObjectList,
                  generator: Generator,
                  flow_direction: LaneDirection,
-                 objects_in_lane: list = [],
+                 objects_in_lane: list = None,
                  traffic_light: Optional[TrafficLight] = None):
         """ objects is the global list of objects """
         # the global object list
@@ -35,12 +37,15 @@ class Lane:
         self.direction = flow_direction
         self.lane_num = lane_num
         # a list of object identifiers
-        self.objects_in_lane = objects_in_lane
+        self.objects_in_lane = objects_in_lane or []
         self.traffic_light = traffic_light
 
     def add(self, driver_id: int):
         """ add an object from the global objects list """
-        self.objects_in_lane.append(driver_id)
+        if driver_id not in self.objects_in_lane:
+            self.objects_in_lane.append(driver_id)
+        else:
+            raise ValueError(f"Adding {driver_id} to this lane twice")
         return self
 
     def get_angle(self):
@@ -52,13 +57,12 @@ class Lane:
     def get_speed_limit(self):
         return self.road.get_speed_limit()
 
-
     def get_position(self, fraction: float):
         """ Return the position of this lane a fraction of a length down the road
          0 = beginning, 1 = end
         """
         road_length = self.road.get_length()
-        x = road_length*fraction-road_length/2
+        x = road_length * fraction - road_length / 2
         lanes = self.objects.get_lanes_by_road(self.road)
         road_width = 0
         my_center = 0
@@ -68,8 +72,8 @@ class Lane:
             if self.lane_num < lane.lane_num:
                 my_center += lane.width
 
-        my_center += self.width/2
-        y = my_center - road_width/2
+        my_center += self.width / 2
+        y = my_center - road_width / 2
         if self.direction == LaneDirection.BACKWARD:
             y = -y
             x = -x
@@ -79,7 +83,6 @@ class Lane:
             return x, y
         else:
             raise SanityError('BETA version, remember?')
-
 
     def get_objects(self) -> list:
         """ return a list of objects in the lane """
@@ -111,17 +114,18 @@ class Lane:
             y = obj.my_vehicle.y
             logging.debug(f"{x=} {y=} {begin_x=} {end_x=} {begin_y=} {end_y=}")
 
-            length = self.road.get_length()
-            #if (x > max_x
-            #    or y > max_y
-            #    or x < min_x
-            #    or y < min_y
-            #):
-            if (x > length/2
-                or y > length/2
-                or x < -length/2
-                or y < -length/2
+            #length = self.road.get_length()
+            if (x > max_x
+                or y > max_y
+                or x < min_x
+                or y < min_y
             ):
+            #if (x > length / 2
+            #        or y > length / 2
+            #        or x < -length / 2
+            #        or y < -length / 2
+            #):
+            #    logging.debug(f"{self.lane_num} finishing {obj_id}")
                 finished.append(obj_id)
         return finished
 
@@ -132,17 +136,19 @@ class Lane:
         edge_1_right_x, edge_1_right_y = self.get_position(1)
         edge_0_left_x, edge_0_left_y = self.get_position(0)
         if self.road.get_direction() % 180 == 90:
-            edge_0_left_x -= self.width/2
-            edge_1_left_x -= self.width/2
-            edge_0_right_x += self.width/2
-            edge_1_right_x += self.width/2
+            edge_0_left_x -= self.width / 2
+            edge_1_left_x -= self.width / 2
+            edge_0_right_x += self.width / 2
+            edge_1_right_x += self.width / 2
         else:
-            edge_0_left_y -= self.width/2
-            edge_1_left_y -= self.width/2
-            edge_0_right_y += self.width/2
-            edge_1_right_y += self.width/2
-        drawings += [Visual(LINE_COLOR, [(edge_0_left_x, edge_0_left_y), (edge_1_left_x, edge_1_left_y), (edge_1_left_x, edge_1_left_y), (edge_0_left_x, edge_0_left_y+1)]),
-                  Visual(LINE_COLOR, [(edge_0_right_x, edge_0_right_y), (edge_1_right_x, edge_1_right_y), (edge_1_right_x, edge_1_right_y), (edge_0_right_x, edge_0_right_y)])]
+            edge_0_left_y -= self.width / 2
+            edge_1_left_y -= self.width / 2
+            edge_0_right_y += self.width / 2
+            edge_1_right_y += self.width / 2
+        drawings += [Visual(LINE_COLOR, [(edge_0_left_x, edge_0_left_y), (edge_1_left_x, edge_1_left_y),
+                                         (edge_1_left_x, edge_1_left_y), (edge_0_left_x, edge_0_left_y + 1)]),
+                     Visual(LINE_COLOR, [(edge_0_right_x, edge_0_right_y), (edge_1_right_x, edge_1_right_y),
+                                         (edge_1_right_x, edge_1_right_y), (edge_0_right_x, edge_0_right_y)])]
         return drawings
 
     def update(self, the_time):
@@ -154,5 +160,3 @@ class Lane:
             self.traffic_light.change_color(the_time)
         if self.traffic_light.yellow_time == the_time:
             self.traffic_light.change_color(the_time)
-
-

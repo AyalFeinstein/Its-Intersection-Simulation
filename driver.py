@@ -49,13 +49,16 @@ class Driver:
         occupied = []
         for driver in objects.values():
             if driver is not self:
-                distance = fabs(sqrt(
-                    pow((driver.my_vehicle.x - self.my_vehicle.x), 2) + pow((driver.my_vehicle.y - self.my_vehicle.y),
-                                                                            2)))
-                rear_x, rear_y = driver.my_vehicle.get_rear()
-                distance_to_back = fabs(
-                    (sqrt(pow((rear_x - self.my_vehicle.x), 2) + pow((rear_y - self.my_vehicle.y), 2))))
-                if distance <= self.visibility or distance_to_back <= self.visibility:
+                closest = self.get_closest(driver)
+                min_distance = cal_distance(closest)
+                # distance = fabs(sqrt(
+                #     pow((driver.my_vehicle.x - self.my_vehicle.x), 2) + pow((driver.my_vehicle.y - self.my_vehicle.y),
+                #                                                             2)))
+                # rear_x, rear_y = driver.my_vehicle.get_rear()
+                # distance_to_back = fabs(
+                #     (sqrt(pow((rear_x - self.my_vehicle.x), 2) + pow((rear_y - self.my_vehicle.y), 2))))
+                # if distance <= self.visibility or distance_to_back <= self.visibility:
+                if min_distance <= self.visibility:
                     occupied.append(driver)
         return occupied
 
@@ -134,18 +137,25 @@ class Driver:
                 if min_time_to_be_safe is not None
                 else driver.my_vehicle.speed),
             0)
+        my_current_acceleration = self.my_vehicle.acceleration
         if distance_to_intercept < safe_following_distance:
-            return -self.my_vehicle.max_acceleration
+            logging.debug(f"{self.object_id} planning to STOP because {distance_to_intercept=} < {safe_following_distance=}")
+            return -self.my_vehicle.max_acceleration - my_current_acceleration
         elif distance_to_intercept < SAFE_GAP_IN_SECONDS * MAX_CARE_RANGE * self.quality.following_distance * self.my_vehicle.speed:
+            logging.debug(f"{self.object_id} planning to FOLLOW because {distance_to_intercept=} inside the care range")
             your_final_speed = their_new_speed
         elif min_time_to_be_safe is None:
+            logging.debug(f"{self.object_id} planning to GO because no traffic ahead")
             return None
         elif min_time_to_be_safe > SAFE_GAP_IN_SECONDS * MAX_CARE_RANGE * self.quality.following_distance:
+            logging.debug(f"{self.object_id} planning to GO because no traffic within the care time")
             return None
         elif min_time_to_be_safe <= SAFE_GAP_IN_SECONDS * self.quality.following_distance:
-            return -self.my_vehicle.max_acceleration
+            logging.debug(f"{self.object_id} planning to STOP because there's traffic within safe time range")
+            return -self.my_vehicle.max_acceleration - my_current_acceleration
         else:
-            your_final_speed = their_new_speed
+            logging.debug(f"{self.object_id} planning to GO because nothing else to do")
+            return None  # your_final_speed = their_new_speed
 
         speed_diff = your_final_speed - self.my_vehicle.speed
         if min_time_to_be_safe == 0:
@@ -233,7 +243,7 @@ class Driver:
                 accel_change = self._adjust_acceleration_for_other_driver_perpendicular(driver)
             else:
                 accel_change = self._adjust_acceleration_for_other_driver(driver)
-            if accel_change:
+            if accel_change is not None:
                 changes.append(accel_change)
         changes = min(changes)
         logging.debug(f'{self.object_id=} {changes=}')
