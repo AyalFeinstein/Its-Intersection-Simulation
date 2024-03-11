@@ -11,6 +11,7 @@ from collision_detector import Detector
 from visuals import Visual
 from signal import TrafficLight, StopSign
 from typing import Optional
+import logging
 
 class SanityError(Exception):
     pass
@@ -94,7 +95,7 @@ class Lane:
             self.objects_in_lane.remove(obj)
         return self
 
-    def detect_end(self):
+    def detect_end(self) -> list[int]:
         begin_x, begin_y = self.get_position(0.0)
         end_x, end_y = self.get_position(1.0)
         finished = []
@@ -108,9 +109,19 @@ class Lane:
             obj = self.objects[obj_id]
             x = obj.my_vehicle.x
             y = obj.my_vehicle.y
+            logging.debug(f"{x=} {y=} {begin_x=} {end_x=} {begin_y=} {end_y=}")
+
             length = self.road.get_length()
+            #if (x > max_x
+            #    or y > max_y
+            #    or x < min_x
+            #    or y < min_y
+            #):
             if (x > length/2
-            or y > length/2):
+                or y > length/2
+                or x < -length/2
+                or y < -length/2
+            ):
                 finished.append(obj_id)
         return finished
 

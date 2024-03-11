@@ -12,6 +12,7 @@ from road import Road
 from visuals import Window, Visual
 from constants import Ratio, ROUNDING
 import pygame
+from itertools import chain
 pygame.init()
 
 
@@ -98,15 +99,15 @@ def main():
 
         # detect crashes
         crashed_ids = detector.detect_crashes()
-        final_crashed_ids += crashed_ids
-        crashes += len(crashed_ids)/2
+        crashes += floor(len(crashed_ids)/2)
         if crashed_ids:
             logging.info(f'Objects {crashed_ids} crashed.\n {[global_objects_list[crashed_id] for crashed_id in crashed_ids]}')
-        crashes = floor(crashes)
         logging.info(f'crashed_ids={crashed_ids}')
+
+        final_crashed_ids += crashed_ids
         final_crashed.extend(global_objects_list[crashed_id] for crashed_id in crashed_ids)
 
-        finished_ids = crashed_ids
+        finished_ids = crashed_ids.copy()
         # remove objects that crashed or move off the board
         for lane in lanes:
             finished_ids += lane.detect_end()
@@ -127,10 +128,12 @@ def main():
         throughput_out += len(finished_ids)-len(crashed_ids)
     for obj in global_objects_list.values():
         average_speed += obj.my_vehicle.average_speed()
-    average_speed /= throughput
+    average_speed = round(average_speed / throughput, ROUNDING)
+    crashed_drivers_string = "\n".join(str(f) for f in final_crashed)
     print(f'There were {crashes} crashes.')
-    print(f'The following objects crashed:\n{final_crashed}')
+    print(f'The following objects crashed:\n{crashed_drivers_string}')
     print(f'{round(throughput/total_timesteps*timestep_length, ROUNDING)} cars per second \n{round(throughput_out/total_timesteps*timestep_length, ROUNDING)} cars out per second \n{average_speed=} meters per second')
+
 
 if __name__ == "__main__":
     main()

@@ -237,7 +237,7 @@ class Driver:
                 changes.append(accel_change)
         changes = min(changes)
         logging.debug(f'{self.object_id=} {changes=}')
-        return changes
+        return round(changes, ROUNDING)
 
     def get_needed_angle_change(self):
         """ plan weather to turn or not """

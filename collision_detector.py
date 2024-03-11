@@ -11,7 +11,7 @@ class Detector:
 
         self._global_objects_list = global_objects_list
 
-    def detect_crashes(self) -> list[tuple[int, int]]:
+    def detect_crashes(self) -> list[int]:
         """ Return a list of crashed objects
         each crash is represented as a tuple of the object ids involved
         """
