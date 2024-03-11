@@ -30,22 +30,23 @@ class Generator:
         self.__last_generation = None
 
     # TODO: HINT: WRITE TESTS FOR THIS FUNCTION
-    def should_generate(self, timestep, road_length, objects: GlobalObjectList):
+    def should_generate(self, timestep, road_length, objects: GlobalObjectList) -> tuple[bool, float]:
         """ Return True if a vehicle should be generated this timestep """
         if self.__last_generation not in objects.values():
             self.__last_generation = None
         if self.__last_generation is None:
-            return True
+            return True, 0
         rear_x, rear_y = self.__last_generation.my_vehicle.get_rear()
         length = self.__last_generation.my_vehicle.length
+        safe_length = (rear_x or rear_y)-road_length
         if rear_x - length < -road_length / 2 or rear_y - length < -road_length / 2:
-            return False
+            return False, safe_length
         if self._next_generation_time <= timestep:
             new_next_generation_time = poisson(self._flow)
             self._next_generation_time += new_next_generation_time
-            return True
+            return True, safe_length
         else:
-            return False
+            return False, safe_length
 
     def pick_vehicle_type(self):
         """ Pick a Vehicle's type """
@@ -60,17 +61,17 @@ class Generator:
         my_type = self.pick_vehicle_type()
         vehicle_settings = my_type.get_settings(settings)
         length = vehicle_settings['length']
-        if self.__last_generation is not None:
+        if self.__last_generation:
             speed = min(Driver.calc_max_possible_speed(int(vehicle_settings['max_speed']), road_max, speeding), self.__last_generation.my_vehicle.speed)
-            acceleration = max(min(self.__last_generation.my_vehicle.acceleration, 0), -vehicle_settings['max_acceleration'])
+            acceleration = min(max(self.__last_generation.my_vehicle.acceleration, -vehicle_settings['max_acceleration']), vehicle_settings['max_acceleration'])
         else:
             speed = Driver.calc_max_possible_speed(int(vehicle_settings['max_speed']), road_max, speeding)
             acceleration = 0
         width = vehicle_settings['width']
-
         return Vehicle(x=x, y=y,
                        length=length, speed=speed,
-                       acceleration=acceleration, max_speed=vehicle_settings['max_speed'],
+                       acceleration=acceleration,
+                       max_speed=vehicle_settings['max_speed'],
                        max_acceleration=vehicle_settings['max_acceleration'],
                        max_angle=vehicle_settings['max_angle'],
                        angle=self.angle,

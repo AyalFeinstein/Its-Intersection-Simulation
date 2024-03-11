@@ -8,7 +8,7 @@ SAFE_GAP_IN_SECONDS = 4
 # factor of following distance to stop caring about the vehicle in front of you (multiple of safe gap in seconds).
 MAX_CARE_RANGE = 2
 # The minimum distance cars can be from each other (car lengths)
-MIN_FOLLOWING_DISTANCE = 3
+MIN_FOLLOWING_DISTANCE = 4
 # the multiple of following distance for perpendicular drivers.
 PERPENDICULAR_FOLLOWING_DISTANCE = 5
 

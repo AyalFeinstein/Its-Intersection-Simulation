@@ -4,11 +4,11 @@ loglevel: DEBUG
 # time per timestep (seconds)
 timestep: 0.2
 # number of timesteps to run
-simulation_timesteps: 1000
+simulation_timesteps: 2000
 # Time in seconds between timesteps for visuals
 simulation_speed: 0
 # meters visible
-visibility: 100
+visibility: 20
 vehicles:
   bicycle:
     length:
@@ -27,7 +27,7 @@ vehicles:
     max_speed:
       50
     max_acceleration:
-      5.0
+      4.5
     max_angle:
       40
     width:
@@ -56,11 +56,11 @@ vehicles:
       0.3
   motorcycle:
     length:
-      1.5
+      1.8
     max_speed:
       31
     max_acceleration:
-      10
+      5.0
     max_angle:
       60
     width:
@@ -70,19 +70,19 @@ vehicles:
 roads:
   - length: 200
     direction: 90
-    speed_limit: 50
+    speed_limit: 10
     lanes:
       - width: 5
         flow_direction: 1
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 1
+          flow: 7
           vehicle_distribution: # must add up to 1.0
-            car: 0.9
-            bike: 0.0
+            car: 0.0
+            bike: 0.5
             truck: 0.0
-            motorcycle: 0.1
+            motorcycle: 0.5
             pedestrian: 0.0
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
@@ -94,20 +94,20 @@ roads:
     green_time: 10
   - length: 200
     direction: 0
-    speed_limit: 20
+    speed_limit: 10
     lanes:
       - width: 7
         flow_direction: 90
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 2
+          flow: 5
           vehicle_distribution: # must add up to 1.0
-            car: 1.0
+            car: 0.9
             bike: 0.0
             truck: 0.0
-            motorcycle: 0.0
-            pedestrian: 0.00
+            motorcycle: 0.1
+            pedestrian: 0.0
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1

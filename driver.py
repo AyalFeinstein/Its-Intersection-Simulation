@@ -144,6 +144,9 @@ class Driver:
         elif distance_to_intercept < SAFE_GAP_IN_SECONDS * MAX_CARE_RANGE * self.quality.following_distance * self.my_vehicle.speed:
             logging.debug(f"{self.object_id} planning to FOLLOW because {distance_to_intercept=} inside the care range")
             your_final_speed = their_new_speed
+        elif distance_to_intercept < MIN_FOLLOWING_DISTANCE:
+            logging.debug(f"{self.object_id} planning to STOP because {distance_to_intercept=} < {MIN_FOLLOWING_DISTANCE=}")
+            return -self.my_vehicle.max_acceleration - my_current_acceleration
         elif min_time_to_be_safe is None:
             logging.debug(f"{self.object_id} planning to GO because no traffic ahead")
             return None
@@ -314,6 +317,13 @@ class Driver:
         driver_max = road_max * speeding
         speed = min(vehicle_max, driver_max)
         return speed
+
+    def copy(self):
+        return Driver(object_id=self.object_id,
+                      my_vehicle=self.my_vehicle,
+                      visibility=self.visibility,
+                      destination=self.destination,
+                      quality=self.quality)
 
     def accelerate(self, change):
         self.my_vehicle.accelerate(change)
