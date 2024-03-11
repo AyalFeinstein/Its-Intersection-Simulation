@@ -77,13 +77,13 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 2
+          flow: 0.1
           vehicle_distribution: # must add up to 1.0
             car: 0.0
             bike: 0.0
             truck: 0.0
-            motorcycle: 1.0
-            pedestrian: 0.0
+            motorcycle: 0.1
+            pedestrian: 0.9
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
@@ -101,7 +101,7 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 1
+          flow: 0.5
           vehicle_distribution: # must add up to 1.0
             car: 1.0
             bike: 0.0

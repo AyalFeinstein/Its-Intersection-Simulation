@@ -10,7 +10,7 @@ import logging
 from math import floor
 from road import Road
 from visuals import Window, Visual
-from constants import Ratio
+from constants import Ratio, ROUNDING
 import pygame
 pygame.init()
 
@@ -21,6 +21,7 @@ def main():
     throughput_out = 0
     final_crashed = []
     final_crashed_ids = []
+    average_speed = 0
 
     crashes = 0
     my_settings = Settings(sys.argv[1])
@@ -102,14 +103,14 @@ def main():
         if crashed_ids:
             logging.info(f'Objects {crashed_ids} crashed.\n {[global_objects_list[crashed_id] for crashed_id in crashed_ids]}')
         crashes = floor(crashes)
-        print(f'crashed_ids={crashed_ids}')
+        logging.info(f'crashed_ids={crashed_ids}')
         final_crashed.extend(global_objects_list[crashed_id] for crashed_id in crashed_ids)
 
         finished_ids = crashed_ids
         # remove objects that crashed or move off the board
         for lane in lanes:
             finished_ids += lane.detect_end()
-        print(f'finished_ids={finished_ids}')
+        logging.info(f'finished_ids={finished_ids}')
         # remove objects that move off the board
         for finished_object in finished_ids:
             if finished_object in global_objects_list:
@@ -118,15 +119,18 @@ def main():
                 logging.info(f"Object {finished_object} being removed with a length of {the_object.my_vehicle.length} with location ({the_object.my_vehicle.x, the_object.my_vehicle.y}).")
                 for lane in global_objects_list.get_lanes():
                     lane.remove(finished_object)
-
+                average_speed += the_object.my_vehicle.average_speed()
                 del global_objects_list[finished_object]
                 throughput_out += 1
             else:
                 logging.warning(f'Sim is trying to delete an object id={finished_object} that it already deleted. Ignoring it.')
         throughput_out += len(finished_ids)-len(crashed_ids)
+    for obj in global_objects_list.values():
+        average_speed += obj.my_vehicle.average_speed()
+    average_speed /= throughput
     print(f'There were {crashes} crashes.')
     print(f'The following objects crashed:\n{final_crashed}')
-    print(f'{throughput=}\n{throughput_out=}')
+    print(f'{round(throughput/total_timesteps*timestep_length, ROUNDING)} cars per second \n{round(throughput_out/total_timesteps*timestep_length, ROUNDING)} cars out per second \n{average_speed=} meters per second')
 
 if __name__ == "__main__":
     main()

@@ -38,6 +38,8 @@ class Vehicle:
         self.turn_signal: Direction = Direction.OFF
         self.angle = angle  # direction you are facing
         self.width = width
+        self.my_time = 0
+        self.my_distance = 0
 
     # speed_limit: int
     # turn_signal: str
@@ -63,11 +65,15 @@ class Vehicle:
         if self.acceleration < 0:
             time_to_stop = -self.speed/self.acceleration
             timestep_length = min(time_to_stop, timestep_length)
+        old_x = self.x
+        old_y = self.y
         self.x, self.y = self.pretend_update(timestep_length)
+        self.my_distance += cal_distance((self.x, self.y, old_x, old_y))
         self.speed += self.acceleration * timestep_length
         self.speed = max(self.speed, 0)
         self.speed = min(self.speed, self.max_speed)
         self.speed = round(self.speed, constants.ROUNDING)
+        self.my_time += timestep_length
 
     def accelerate(self, amount: float):
         """ Changes acceleration positively or negatively """
@@ -102,6 +108,11 @@ class Vehicle:
     def __repr__(self):
         return f'{self.__class__.__name__}: x={self.x} y={self.y}, length={self.length}, speed={self.speed}, acceleration={self.acceleration}, angle={self.angle}'
 
+    def average_speed(self):
+        try:
+            return self.my_distance/self.my_time
+        except ZeroDivisionError:
+            return 0
     def draw(self):
         length = cal_length_compared_to_screen((NotImplemented, NotImplemented), self.length)
 
