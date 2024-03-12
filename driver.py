@@ -77,7 +77,7 @@ class Driver:
                 key=cal_distance))
 
     def get_safe_following_distance(self):
-        return min(SAFE_GAP_IN_SECONDS * abs(self.my_vehicle.speed),
+        return max(SAFE_GAP_IN_SECONDS * abs(self.my_vehicle.speed),
                    self.my_vehicle.length * MIN_FOLLOWING_DISTANCE) * self.quality.following_distance
 
     def _get_desired_acceleration_change(self, road_limit: float, timestep_length: float):
