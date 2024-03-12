@@ -45,11 +45,11 @@ class Generator:
                 rear_x, rear_y = self.__last_generation.my_vehicle.get_rear()
                 distance = cal_distance((x, y, rear_x, rear_y))
                 safe_following_distance = self.__last_generation.get_safe_following_distance()
-                if (distance <= safe_following_distance * 0.1
+                if (distance <= safe_following_distance
                     or not (x <= rear_x <= endx)  # rear has not yet passed beginning of road
                     or not (y <= rear_y <= endy)
                 ):
-                    logging.debug(f"generator will not generate because: {distance} <= {safe_following_distance*0.1=} or {not (x < rear_x < endx)=} or {not (y < rear_y < endy)=}")
+                    logging.debug(f"generator will not generate because: {distance} <= {safe_following_distance=} or {not (x < rear_x < endx)=} or {not (y < rear_y < endy)=}")
                     return False
             new_next_generation_time = poisson(self._flow)
             self._next_generation_time += new_next_generation_time

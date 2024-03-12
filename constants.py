@@ -10,7 +10,7 @@ MAX_CARE_RANGE = 2
 # The minimum distance cars can be from each other (car lengths)
 MIN_FOLLOWING_DISTANCE = 1
 # the multiple of following distance for perpendicular drivers.
-PERPENDICULAR_FOLLOWING_DISTANCE = 5
+PERPENDICULAR_FOLLOWING_DISTANCE = 8
 
 
 
