@@ -71,14 +71,12 @@ def main():
         # generate objects
         for this_lane in lanes:
             road_speed_limit = this_lane.get_speed_limit()
+            x0, y0 = this_lane.get_position(0)
             # this_lane.update(the_time)
-            should_generate, safe_distance = this_lane.generator.should_generate(the_time, this_lane.road.get_length(), global_objects_list)
+            should_generate = this_lane.generator.should_generate(the_time, this_lane)
             if should_generate:
-                x0, y0 = this_lane.get_position(0)
                 endx, endy = this_lane.get_position(1)
                 new_driver = this_lane.generator.generate(x0, y0, my_settings['visibility'], endx, endy, road_speed_limit, my_settings)
-                if safe_distance >= new_driver.my_vehicle.length:
-                    continue
                 global_objects_list[new_driver.object_id] = new_driver
                 this_lane.add(new_driver.object_id)
                 logging.info(f"Generating a vehicle={new_driver.object_id} in lane={this_lane} position=({x0}, {y0}), destination=({endx}, {endy}) of type {new_driver.my_vehicle}")

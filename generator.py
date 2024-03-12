@@ -1,5 +1,6 @@
 import logging
 
+from utils import cal_distance
 from vehicle import Vehicle, Car, Motorcycle, Truck, Pedestrian, Bicycle
 from random import randint, choices, gauss, random, choice
 from driver import Quality, Driver
@@ -26,27 +27,37 @@ class Generator:
         self._flow = self.settings["flow"]
         self._next_generation_time = poisson(self._flow)
         self._next_id = 0
-        self.__last_speed = None
         self.__last_generation = None
 
     # TODO: HINT: WRITE TESTS FOR THIS FUNCTION
-    def should_generate(self, timestep, road_length, objects: GlobalObjectList) -> tuple[bool, float]:
+    def should_generate(self, timestep, lane) -> bool:
         """ Return True if a vehicle should be generated this timestep """
-        if self.__last_generation not in objects.values():
-            self.__last_generation = None
-        if self.__last_generation is None:
-            return True, 0
-        rear_x, rear_y = self.__last_generation.my_vehicle.get_rear()
-        length = self.__last_generation.my_vehicle.length
-        safe_length = (rear_x or rear_y)-road_length
-        if rear_x - length < -road_length / 2 or rear_y - length < -road_length / 2:
-            return False, safe_length
+        x, y = lane.get_position(0)
+        endx, endy = lane.get_position(1)
+        if self.__last_generation not in self.objects.values():
+            objects_in_lane = lane.get_objects()
+            if not objects_in_lane:
+                self.__last_generation = None
+            else:
+                self.__last_generation = objects_in_lane[-1]
         if self._next_generation_time <= timestep:
+            if self.__last_generation is not None:
+                rear_x, rear_y = self.__last_generation.my_vehicle.get_rear()
+                distance = cal_distance((x, y, rear_x, rear_y))
+                safe_following_distance = self.__last_generation.get_safe_following_distance()
+                if (distance <= safe_following_distance * 0.1
+                    or not (x <= rear_x <= endx)  # rear has not yet passed beginning of road
+                    or not (y <= rear_y <= endy)
+                ):
+                    logging.debug(f"generator will not generate because: {distance} <= {safe_following_distance*0.1=} or {not (x < rear_x < endx)=} or {not (y < rear_y < endy)=}")
+                    return False
             new_next_generation_time = poisson(self._flow)
             self._next_generation_time += new_next_generation_time
-            return True, safe_length
+            logging.debug(f"generator will generate at {timestep}. {self._next_generation_time=}")
+            return True
         else:
-            return False, safe_length
+            logging.debug(f"generator will not generate at {timestep}. waiting for {self._next_generation_time=}")
+            return False
 
     def pick_vehicle_type(self):
         """ Pick a Vehicle's type """
@@ -61,21 +72,23 @@ class Generator:
         my_type = self.pick_vehicle_type()
         vehicle_settings = my_type.get_settings(settings)
         length = vehicle_settings['length']
-        if self.__last_generation:
-            speed = min(Driver.calc_max_possible_speed(int(vehicle_settings['max_speed']), road_max, speeding), self.__last_generation.my_vehicle.speed)
-            acceleration = min(max(self.__last_generation.my_vehicle.acceleration, -vehicle_settings['max_acceleration']), vehicle_settings['max_acceleration'])
+        if self.__last_generation is not None:
+            speed = min(Driver.calc_max_possible_speed(vehicle_settings['max_speed'], road_max, speeding), self.__last_generation.my_vehicle.speed)
+            acceleration = max(min(self.__last_generation.my_vehicle.acceleration, 0), -vehicle_settings['max_acceleration'])
         else:
-            speed = Driver.calc_max_possible_speed(int(vehicle_settings['max_speed']), road_max, speeding)
+            speed = Driver.calc_max_possible_speed(vehicle_settings['max_speed'], road_max, speeding)
             acceleration = 0
         width = vehicle_settings['width']
-        return Vehicle(x=x, y=y,
-                       length=length, speed=speed,
+        self.__last_generation = Vehicle(x=x, y=y,
+                       length=length,
+                       speed=speed,
                        acceleration=acceleration,
                        max_speed=vehicle_settings['max_speed'],
                        max_acceleration=vehicle_settings['max_acceleration'],
                        max_angle=vehicle_settings['max_angle'],
                        angle=self.angle,
                        width=width)
+        return self.__last_generation
 
     def init_following_distance(self):
         self.following_distance = randint(2, 7)
