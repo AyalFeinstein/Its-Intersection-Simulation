@@ -58,6 +58,7 @@ class Driver:
                 # distance_to_back = fabs(
                 #     (sqrt(pow((rear_x - self.my_vehicle.x), 2) + pow((rear_y - self.my_vehicle.y), 2))))
                 # if distance <= self.visibility or distance_to_back <= self.visibility:
+                logging.debug(f"visibility: {self.object_id} to {driver.object_id}? {min_distance=} <= {self.visibility=} = {min_distance <= self.visibility}")
                 if min_distance <= self.visibility:
                     occupied.append(driver)
         return occupied
@@ -89,20 +90,19 @@ class Driver:
         """ Gets the minimum time to intercept another driver and the distance to intercept.
          1 solution: time to intercept, distance.
          None, distance: Never crashes"""
-        my_speed_x, my_speed_y = split_vector(self.my_vehicle.speed, self.my_vehicle.angle)
-        my_acceleration_x, my_acceleration_y = split_vector(self.my_vehicle.acceleration, self.my_vehicle.angle)
+        my_direction_x, my_direction_y = split_vector(1.0, self.my_vehicle.angle)
 
         his_speed_x, his_speed_y = split_vector(driver.my_vehicle.speed, driver.my_vehicle.angle)
         his_acceleration_x, his_acceleration_y = split_vector(driver.my_vehicle.acceleration, driver.my_vehicle.angle)
 
-        his_speed_in_direction_of_my_speed = dot(his_speed_x, his_speed_y, my_speed_x, my_speed_y)
+        his_speed_in_direction_of_my_speed = dot(his_speed_x, his_speed_y, my_direction_x, my_direction_y)
         his_acceleration_in_direction_of_my_acceleration = dot(his_acceleration_x, his_acceleration_y,
-                                                               my_acceleration_x, my_acceleration_y)
+                                                               my_direction_x, my_direction_y)
 
         my_closest_x, my_closest_y, their_closest_x, their_closest_y = self.get_closest(driver)
         distance_in_direction_of_my_speed = dot(their_closest_x - my_closest_x,
                                                 their_closest_y - my_closest_y,
-                                                my_speed_x, my_speed_y)
+                                                my_direction_x, my_direction_y)
 
         time_to_intercept = quadratic_equation(0.5 * (
                 his_acceleration_in_direction_of_my_acceleration - self.my_vehicle.acceleration),
@@ -118,14 +118,16 @@ class Driver:
         # try to find how much we need to slow down in order not to crash with this self
         # I need to check whether I am getting too close to the car in front of me
         safe_following_distance = self.get_safe_following_distance()
-        my_speed_x, my_speed_y = split_vector(self.my_vehicle.speed, self.my_vehicle.angle)
 
         my_closest_x, my_closest_y, his_closest_x, his_closest_y = self.get_closest(driver)
 
         distance_x, distance_y = his_closest_x - my_closest_x, his_closest_y - my_closest_y
-        distance_in_direction_of_my_speed = dot(distance_x, distance_y, my_speed_x, my_speed_y)
+
+        dx, dy = split_vector(1.0, self.my_vehicle.angle)
+        distance_in_direction_of_my_speed = dot(distance_x, distance_y, dx, dy)
 
         if distance_in_direction_of_my_speed <= 0:
+            logging.debug(f"{self.object_id} and {driver.object_id}: {distance_in_direction_of_my_speed=}")
             return None
 
         min_time_to_be_safe, distance_to_intercept = self._to_intercept(driver)
@@ -260,15 +262,12 @@ class Driver:
 
     def _adjust_acceleration_for_other_driver_perpendicular(self, driver):
         min_time_to_be_safe, distance_to_intercept, their_time_to_leave, their_distance_to_intercept = self._to_intercept_perpendicular(driver)
-        logging.debug(f"{self.object_id} and {driver.object_id}: {min_time_to_be_safe=} {distance_to_intercept=}")
+        logging.debug(f"{self.object_id} and {driver.object_id}: (perpendicular) {min_time_to_be_safe=} {distance_to_intercept=}")
         safe_following_distance = self.get_safe_following_distance()*PERPENDICULAR_FOLLOWING_DISTANCE
-        my_speed_x, my_speed_y = split_vector(self.my_vehicle.speed, self.my_vehicle.angle)
 
-        my_closest_x, my_closest_y, his_closest_x, his_closest_y = self.get_closest(driver)
         my_closest_x, my_closest_y, their_closest_x, their_closest_y = self.get_closest(driver)
         direct_distance = cal_distance((my_closest_x, my_closest_y, their_closest_x, their_closest_y))
 
-        distance_x, distance_y = his_closest_x - my_closest_x, his_closest_y - my_closest_y
         if distance_to_intercept <= 0:
             return None
         if direct_distance <= safe_following_distance:

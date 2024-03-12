@@ -62,14 +62,15 @@ class Vehicle:
         """ Changes the x and y of the vehicle in question as well as changing the speed """
         if self.speed < 0:
             raise ValueError('Speed must be more then or equal to 0')
+        moving_time = timestep_length
         if self.acceleration < 0:
             time_to_stop = -self.speed/self.acceleration
-            timestep_length = min(time_to_stop, timestep_length)
+            moving_time = min(time_to_stop, timestep_length)
         old_x = self.x
         old_y = self.y
-        self.x, self.y = self.pretend_update(timestep_length)
+        self.x, self.y = self.pretend_update(moving_time)
         self.my_distance += cal_distance((self.x, self.y, old_x, old_y))
-        self.speed += self.acceleration * timestep_length
+        self.speed += self.acceleration * moving_time
         self.speed = max(self.speed, 0)
         self.speed = min(self.speed, self.max_speed)
         self.speed = round(self.speed, constants.ROUNDING)
