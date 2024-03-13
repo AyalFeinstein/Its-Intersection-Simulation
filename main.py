@@ -4,6 +4,7 @@ from collision_detector import Detector
 from lane import Lane
 from generator import Generator
 from objects import GlobalObjectList
+
 from settings import Settings
 import sys
 import logging

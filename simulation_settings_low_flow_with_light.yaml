@@ -4,9 +4,9 @@ loglevel: DEBUG
 # time per timestep (seconds)
 timestep: 0.2
 # number of timesteps to run
-simulation_timesteps: 10000
+simulation_timesteps: 1000
 # Time in seconds between timesteps for visuals
-simulation_speed: 0.1
+simulation_speed: 0.0
 # meters visible
 visibility: 200
 vehicles:

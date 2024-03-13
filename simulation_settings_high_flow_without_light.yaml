@@ -1,10 +1,10 @@
 # what are all possible simulation settings that you want to handle?
 #logging level (DEBUG, INFO, WARN, ERROR)
-loglevel: INFO
+loglevel: WARN
 # time per timestep (seconds)
 timestep: 0.2
 # number of timesteps to run
-simulation_timesteps: 10000
+simulation_timesteps: 1000
 # Time in seconds between timesteps for visuals
 simulation_speed: 0
 # meters visible

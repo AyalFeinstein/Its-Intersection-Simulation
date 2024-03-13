@@ -77,7 +77,7 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 2
+          flow: 10
           vehicle_distribution: # must add up to 1.0
             car: 1.0
             bike: 0.0
@@ -87,14 +87,14 @@ roads:
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
-            width: 0.1
+            width: 0.01
     # True or False:
     traffic_light: True
     stop_sign: False
     green_time: 10
   - length: 300
     direction: 0
-    speed_limit: 20
+    speed_limit: 70
     lanes:
       - width: 7
         flow_direction: 0
@@ -111,13 +111,12 @@ roads:
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
-            width: 0.1
+            width: 0.01
     traffic_light: True
     stop_sign: False
     green_time: 10
 intersection:
-  traffic_control: none
-  pedestrian_crossing_mechanism: none
-  bicycle_crossing_mechanism: none
-
+  traffic_light:
+    cycle_time: 60
+    yellow_time: 3
 
