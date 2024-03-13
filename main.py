@@ -139,7 +139,6 @@ def main():
                     lane.remove(finished_object)
                 average_speed += the_object.my_vehicle.average_speed()
                 del global_objects_list[finished_object]
-                throughput_out += 1
             else:
                 logging.warning(f'Sim is trying to delete an object id={finished_object} that it already deleted. Ignoring it.')
         throughput_out += len(finished_ids)-len(crashed_ids)
