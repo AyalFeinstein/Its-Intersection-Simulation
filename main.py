@@ -149,7 +149,7 @@ def main():
     crashed_drivers_string = "\n".join(str(f) for f in final_crashed)
     print(f'There were {crashes} crashes.')
     print(f'The following objects crashed:\n{crashed_drivers_string}')
-    print(f'{round(throughput/total_timesteps*timestep_length, ROUNDING)} cars per second \n{round(throughput_out/total_timesteps*timestep_length, ROUNDING)} cars out per second \n{average_speed=} meters per second')
+    print(f'{round(throughput/(total_timesteps*timestep_length), ROUNDING)} cars per second \n{round(throughput_out/(total_timesteps*timestep_length), ROUNDING)} cars out per second \n{average_speed=} meters per second')
 
 
 if __name__ == "__main__":
