@@ -6,7 +6,7 @@ timestep: 0.2
 # number of timesteps to run
 simulation_timesteps: 10000
 # Time in seconds between timesteps for visuals
-simulation_speed: 0.0
+simulation_speed: 0
 # meters visible
 visibility: 200
 vehicles:
@@ -70,20 +70,20 @@ vehicles:
 roads:
   - length: 300
     direction: 90
-    speed_limit: 20
+    speed_limit: 10
     lanes:
       - width: 5
         flow_direction: 1
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 0.5
+          flow: 1
           vehicle_distribution: # must add up to 1.0
-            car: 0.2
-            bike: 0.2
-            truck: 0.2
-            motorcycle: 0.3
-            pedestrian: 0.1
+            car: 1.0
+            bike: 0.0
+            truck: 0.0
+            motorcycle: 0.0
+            pedestrian: 0.0
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
@@ -94,30 +94,24 @@ roads:
     green_time: 10
   - length: 300
     direction: 0
-    speed_limit: 70
+    speed_limit: 10
     lanes:
       - width: 7
         flow_direction: 0
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 2
+          flow: 1
           vehicle_distribution: # must add up to 1.0
-            car: 0.2
-            bike: 0.2
-            truck: 0.2
-            motorcycle: 0.3
-            pedestrian: 0.1
+            car: 1.0
+            bike: 0.0
+            truck: 0.0
+            motorcycle: 0.0
+            pedestrian: 0.0
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
             width: 0.01
-    traffic_light: True
-    stop_sign: False
-    green_time: 10
-intersection:
-  traffic_light:
-    cycle_time: 60
-    yellow_time: 3
+
 
 

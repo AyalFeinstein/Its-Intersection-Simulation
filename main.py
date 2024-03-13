@@ -33,7 +33,6 @@ def main():
     road_list = my_settings['roads']
     window = Window(global_objects_list)
     # init all Roads
-    print(road_list)
     for road_settings in road_list:
         road_length = road_settings['length']
         current_road = Road(road_length, road_settings['direction'], road_settings['speed_limit'])
@@ -112,14 +111,16 @@ def main():
 
         for this_driver in global_objects_list.values():
             this_driver.my_vehicle.update(timestep_length)
-            logging.info(f"Updating {this_driver}")
+            logging.debug(f"Updating {this_driver}")
 
         # detect crashes
         crashed_ids = detector.detect_crashes()
         crashes += floor(len(crashed_ids)/2)
         if crashed_ids:
-            logging.info(f'Objects {crashed_ids} crashed.\n {[global_objects_list[crashed_id] for crashed_id in crashed_ids]}')
-        logging.info(f'crashed_ids={crashed_ids}')
+            crashed_list = [global_objects_list[crashed_id] for crashed_id in crashed_ids]
+            logging.info(f'Objects {crashed_ids} crashed.')
+            logging.info(f'Crashed objects: {crashed_list}')
+        logging.debug(f'crashed_ids={crashed_ids}')
 
         final_crashed_ids += crashed_ids
         final_crashed.extend(global_objects_list[crashed_id] for crashed_id in crashed_ids)
@@ -128,7 +129,7 @@ def main():
         # remove objects that crashed or move off the board
         for lane in lanes:
             finished_ids += lane.detect_end()
-        logging.info(f'finished_ids={finished_ids}')
+        logging.debug(f'finished_ids={finished_ids}')
         # remove objects that move off the board
         for finished_object in finished_ids:
             if finished_object in global_objects_list:
@@ -148,7 +149,7 @@ def main():
     crashed_drivers_string = "\n".join(str(f) for f in final_crashed)
     print(f'There were {crashes} crashes.')
     print(f'The following objects crashed:\n{crashed_drivers_string}')
-    print(f'{round(throughput/(total_timesteps*timestep_length), ROUNDING)} cars per second \n{round(throughput_out/(total_timesteps*timestep_length), ROUNDING)} cars out per second \n{average_speed=} meters per second')
+    print(f'{throughput} cars in\n{throughput_out} cars out\n{round(throughput/(total_timesteps*timestep_length), ROUNDING)} cars in per second \n{round(throughput_out/(total_timesteps*timestep_length), ROUNDING)} cars out per second \n{average_speed=} meters per second')
 
 
 if __name__ == "__main__":

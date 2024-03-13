@@ -112,12 +112,5 @@ roads:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
             width: 0.01
-    traffic_light: True
-    stop_sign: False
-    green_time: 10
-intersection:
-  traffic_light:
-    cycle_time: 60
-    yellow_time: 3
 
 

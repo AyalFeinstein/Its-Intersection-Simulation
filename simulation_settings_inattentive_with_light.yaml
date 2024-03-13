@@ -1,10 +1,10 @@
 # what are all possible simulation settings that you want to handle?
 #logging level (DEBUG, INFO, WARN, ERROR)
-loglevel: INFO
+loglevel: DEBUG
 # time per timestep (seconds)
 timestep: 0.2
 # number of timesteps to run
-simulation_timesteps: 10000
+simulation_timesteps: 1000
 # Time in seconds between timesteps for visuals
 simulation_speed: 0.0
 # meters visible
@@ -77,17 +77,17 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 0.5
+          flow: 2
           vehicle_distribution: # must add up to 1.0
-            car: 0.2
-            bike: 0.2
-            truck: 0.2
-            motorcycle: 0.3
-            pedestrian: 0.1
+            car: 1.0
+            bike: 0.0
+            truck: 0.0
+            motorcycle: 0.0
+            pedestrian: 0.0
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
-            width: 0.01
+            width: 0.3
     # True or False:
     traffic_light: True
     stop_sign: False
@@ -103,21 +103,21 @@ roads:
           # unit of time between cars (seconds)
           flow: 2
           vehicle_distribution: # must add up to 1.0
-            car: 0.2
-            bike: 0.2
-            truck: 0.2
-            motorcycle: 0.3
-            pedestrian: 0.1
+            car: 1.0
+            bike: 0.0
+            truck: 0.0
+            motorcycle: 0.0
+            pedestrian: 0.0
           attentiveness:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
-            width: 0.01
+            width: 0.3
     traffic_light: True
     stop_sign: False
     green_time: 10
 intersection:
-  traffic_light:
-    cycle_time: 60
-    yellow_time: 3
+  traffic_control: none
+  pedestrian_crossing_mechanism: none
+  bicycle_crossing_mechanism: none
 
 
