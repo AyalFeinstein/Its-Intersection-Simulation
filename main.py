@@ -9,10 +9,9 @@ import sys
 import logging
 from math import floor
 from road import Road
-from visuals import Window, Visual
-from constants import Ratio, ROUNDING
+from visuals import Window
+from constants import ROUNDING
 import pygame
-from itertools import chain
 pygame.init()
 
 
@@ -33,7 +32,6 @@ def main():
     global_objects_list = GlobalObjectList()
     road_list = my_settings['roads']
     window = Window(global_objects_list)
-
     # init all Roads
     print(road_list)
     for road_settings in road_list:
