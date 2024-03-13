@@ -77,7 +77,7 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 156
+          flow: 30
           vehicle_distribution: # must add up to 1.0
             car: 1.0
             bike: 0.0
@@ -101,7 +101,7 @@ roads:
         type: motor
         generator:
           # unit of time between cars (seconds)
-          flow: 99
+          flow: 20
           vehicle_distribution: # must add up to 1.0
             car: 1.0
             bike: 0.0
@@ -112,12 +112,10 @@ roads:
             # 1.0 = always attentive, 0.0 = never attentive
             average: 1
             width: 0.01
-    traffic_light: True
-    stop_sign: False
-    green_time: 10
 intersection:
-  traffic_control: none
-  pedestrian_crossing_mechanism: none
-  bicycle_crossing_mechanism: none
+  traffic_light:
+    cycle_time: 20
+    yellow_time: 3
+
 
 

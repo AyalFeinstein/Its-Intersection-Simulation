@@ -1,5 +1,5 @@
 import time
-
+from signal import TrafficLight, TrafficLightColor, TrafficHead
 from collision_detector import Detector
 from lane import Lane
 from generator import Generator
@@ -46,6 +46,22 @@ def main():
                            global_objects_list, my_generator, lane_settings['flow_direction'])
             global_objects_list.add_lane(my_lane)
 
+    # init the traffic light
+    if "traffic_light" in my_settings.get('intersection', {}):
+        light_settings = my_settings['intersection']['traffic_light']
+        roads = global_objects_list.get_roads()
+        colors = [TrafficLightColor.GREEN, TrafficLightColor.RED]
+        initial_colors = {
+            rd: colors[i]
+            for i, rd in enumerate(roads)
+        }
+        heads = []
+        for lane in global_objects_list.get_lanes():
+            other_road = [rd for rd in roads if rd is not lane.road]
+            position = other_road[0].get_width(global_objects_list)/2 if other_road else 0
+            heads.append(TrafficHead(position, lane, initial_colors[lane.road]))
+        light = TrafficLight(light_settings['cycle_time'], light_settings['yellow_time'], heads)
+        global_objects_list.add_light(light)
     # run the time loop
     total_timesteps = my_settings["simulation_timesteps"]
     timestep_length = my_settings["timestep"]
@@ -92,6 +108,8 @@ def main():
                         logging.debug(f"{this_driver.object_id=} acceleration ={this_driver.my_vehicle.acceleration}")
 
         # updating the map
+        global_objects_list.get_light().update(the_time)
+
         for this_driver in global_objects_list.values():
             this_driver.my_vehicle.update(timestep_length)
             logging.info(f"Updating {this_driver}")

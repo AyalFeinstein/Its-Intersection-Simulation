@@ -1,8 +1,11 @@
+from typing import Optional
+
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT, LINE_WIDTH, ROAD_COLOR, Ratio
 import pygame
 from road import Road
 import time
 from visuals import Visual
+from signal import TrafficLight, Signal
 
 
 class GlobalObjectList(dict):
@@ -14,6 +17,7 @@ class GlobalObjectList(dict):
     _roads: list = []
     _lanes: list = []
     _max_length: float = 0.0
+    _traffic_light: Signal = Signal()
 
     def coord_to_pixels(self, x, y):
         ''' Returns pixels/meter '''
@@ -53,6 +57,15 @@ class GlobalObjectList(dict):
     def get_lanes_by_road(self, road) -> list:
         return [lane for lane in self._lanes if lane.road is road]
 
+    def get_roads(self):
+        return self._roads
+
+    def get_light(self):
+        return self._traffic_light
+
+    def add_light(self, light):
+        self._traffic_light = light
+
     def draw(self):
         all_visuals = []
         all_visuals_pixels = []
@@ -63,6 +76,7 @@ class GlobalObjectList(dict):
             for driver in self.values():
                 if driver.object_id in lane.objects_in_lane:
                     all_visuals.append(driver.draw())
+        all_visuals += self._traffic_light.draw()
 
         for obj in all_visuals:
             newlocs = [self.coord_to_pixels(*loc) for loc in obj.locations]

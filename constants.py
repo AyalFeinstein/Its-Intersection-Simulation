@@ -11,6 +11,7 @@ MAX_CARE_RANGE = 2
 MIN_FOLLOWING_DISTANCE = 1
 # the multiple of following distance for perpendicular drivers.
 PERPENDICULAR_FOLLOWING_DISTANCE = 2
+TRAFFIC_HEAD_SIZE = 5
 
 
 
