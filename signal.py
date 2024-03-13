@@ -19,6 +19,15 @@ class Signal:
     def draw(self):
         return []
 
+    def get_position(self):
+        return 0, 0
+
+    def get_light(self, lane):
+        return TrafficLightColor.GREEN
+
+    def controls(self, lane):
+        return False
+
 
 class TrafficLightColor(IntEnum):
     GREEN = 0
@@ -51,13 +60,16 @@ class TrafficHead:
         self.color = self.color.next()
 
     def draw(self):
-        dx, dy = split_vector(self.position, self.lane.get_angle())
+        dx, dy = self.get_position()
         half_width = TRAFFIC_HEAD_SIZE / 2
         top_left = (-half_width + dx, half_width + dy)
         top_right = (half_width + dx, half_width + dy)
         bottom_right = (half_width + dx, -half_width + dy)
         bottom_left = (-half_width + dx, -half_width + dy)
         return [Visual(self.color.drawing_color(), [top_left, top_right, bottom_right, bottom_left])]
+
+    def get_position(self):
+        return split_vector(self.position, self.lane.get_angle())
 
 
 class TrafficLight(Signal):
@@ -70,7 +82,7 @@ class TrafficLight(Signal):
         self.traffic_heads = traffic_heads
         self._next_change = cycle_time
         self._traffic_heads_by_lane = {
-            th.lane.lane_num: th
+            th.lane: th
             for th in traffic_heads
         }
 
@@ -92,5 +104,12 @@ class TrafficLight(Signal):
 
     def get_light(self, lane) -> TrafficLightColor:
         """ Get the light color facing a lane """
-        head = self._traffic_heads_by_lane[lane.lane_num]
+        head = self._traffic_heads_by_lane[lane]
         return head.color
+
+    def get_position(self, lane) -> tuple[float, float]:
+        head = self._traffic_heads_by_lane[lane]
+        return head.get_position()
+
+    def controls(self, lane):
+        return True

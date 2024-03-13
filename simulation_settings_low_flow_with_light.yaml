@@ -1,0 +1,121 @@
+# what are all possible simulation settings that you want to handle?
+#logging level (DEBUG, INFO, WARN, ERROR)
+loglevel: DEBUG
+# time per timestep (seconds)
+timestep: 0.2
+# number of timesteps to run
+simulation_timesteps: 10000
+# Time in seconds between timesteps for visuals
+simulation_speed: 0.1
+# meters visible
+visibility: 200
+vehicles:
+  bicycle:
+    length:
+      1.7
+    max_speed:
+      10
+    max_acceleration:
+      10
+    max_angle:
+      65
+    width:
+      0.5
+  car:
+    length:
+      3.75
+    max_speed:
+      50
+    max_acceleration:
+      4.5
+    max_angle:
+      40
+    width:
+      2.5
+  truck:
+    length:
+      14.7
+    max_speed:
+      37
+    max_acceleration:
+      5.0
+    max_angle:
+      35
+    width:
+      2.75
+  pedestrian:
+    length:
+      0.2
+    max_speed:
+      1.5
+    max_acceleration:
+      1.2
+    max_angle:
+      360
+    width:
+      0.3
+  motorcycle:
+    length:
+      1.8
+    max_speed:
+      31
+    max_acceleration:
+      5.0
+    max_angle:
+      60
+    width:
+      0.4
+
+# all roads meet at an intersection centered at 0,0
+roads:
+  - length: 300
+    direction: 90
+    speed_limit: 10
+    lanes:
+      - width: 5
+        flow_direction: 1
+        type: motor
+        generator:
+          # unit of time between cars (seconds)
+          flow: 10
+          vehicle_distribution: # must add up to 1.0
+            car: 1.0
+            bike: 0.0
+            truck: 0.0
+            motorcycle: 0.0
+            pedestrian: 0.0
+          attentiveness:
+            # 1.0 = always attentive, 0.0 = never attentive
+            average: 1
+            width: 0.01
+    # True or False:
+    traffic_light: True
+    stop_sign: False
+    green_time: 10
+  - length: 300
+    direction: 0
+    speed_limit: 10
+    lanes:
+      - width: 7
+        flow_direction: 0
+        type: motor
+        generator:
+          # unit of time between cars (seconds)
+          flow: 10
+          vehicle_distribution: # must add up to 1.0
+            car: 1.0
+            bike: 0.0
+            truck: 0.0
+            motorcycle: 0.0
+            pedestrian: 0.0
+          attentiveness:
+            # 1.0 = always attentive, 0.0 = never attentive
+            average: 1
+            width: 0.01
+intersection:
+  traffic_light:
+    cycle_time: 60
+    yellow_time: 3
+
+
+

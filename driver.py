@@ -2,6 +2,8 @@ import logging
 from dataclasses import dataclass
 from random import randint, random
 from typing import Optional
+
+from signal import TrafficLight, Signal, TrafficLightColor
 from visuals import Visual
 from constants import LaneDirection, ROUNDING, SAFE_GAP_IN_SECONDS, DRIVER_COLOR, MAX_CARE_RANGE, MIN_FOLLOWING_DISTANCE, PERPENDICULAR_FOLLOWING_DISTANCE
 from utils import cal_distance, quadratic_equation, split_vector, dot, intervals_overlap
@@ -51,13 +53,6 @@ class Driver:
             if driver is not self:
                 closest = self.get_closest(driver)
                 min_distance = cal_distance(closest)
-                # distance = fabs(sqrt(
-                #     pow((driver.my_vehicle.x - self.my_vehicle.x), 2) + pow((driver.my_vehicle.y - self.my_vehicle.y),
-                #                                                             2)))
-                # rear_x, rear_y = driver.my_vehicle.get_rear()
-                # distance_to_back = fabs(
-                #     (sqrt(pow((rear_x - self.my_vehicle.x), 2) + pow((rear_y - self.my_vehicle.y), 2))))
-                # if distance <= self.visibility or distance_to_back <= self.visibility:
                 logging.debug(f"visibility: {self.object_id} to {driver.object_id}? {min_distance=} <= {self.visibility=} = {min_distance <= self.visibility}")
                 if min_distance <= self.visibility:
                     occupied.append(driver)
@@ -169,6 +164,47 @@ class Driver:
             f"{self.object_id} and {driver.object_id}: {their_new_speed=} {your_final_speed=} {new_accel=} {accel_change=}")
         return accel_change
 
+    def _adjust_acceleration_for_traffic_light(self, lane, traffic_light):
+        # try to find how much we need to slow down in order not to crash with this self
+        # I need to check whether I am getting too close to the car in front of me
+        light_color = traffic_light.get_light(lane)
+        if light_color == TrafficLightColor.GREEN:
+            return None
+        stopping_time = self.my_vehicle.speed/self.my_vehicle.max_acceleration
+        its_x, its_y = traffic_light.get_position(lane)
+        distance_x, distance_y = its_x - self.my_vehicle.x, its_y - self.my_vehicle.y
+
+        dx, dy = split_vector(1.0, self.my_vehicle.angle)
+        distance_in_direction_of_my_speed = dot(distance_x, distance_y, dx, dy)
+
+        if distance_in_direction_of_my_speed <= 0:
+            logging.debug(f"{self.object_id} and {traffic_light}: {distance_in_direction_of_my_speed=}")
+            return None
+
+        my_coordinate = self.my_vehicle.x * dx + self.my_vehicle.y * dy
+        light_coordinate = its_x * dx + its_y * dy
+
+        time_to_intercept, distance_to_intercept = self._when_vehicle_hits_a_location_in_d(my_coordinate, light_coordinate)
+        logging.debug(f"{self.object_id} and {traffic_light}: {time_to_intercept=} {distance_to_intercept=}")
+
+        my_current_acceleration = self.my_vehicle.acceleration
+        if distance_to_intercept < self.get_safe_following_distance():
+            logging.debug(f"{self.object_id} planning to STOP because it is close to the light")
+            return -self.my_vehicle.max_acceleration-my_current_acceleration
+        elif time_to_intercept is None:
+            logging.debug(f"{self.object_id} planning to GO because no interception of light?")
+            return None
+        elif time_to_intercept <= stopping_time:
+            new_accel = -self.my_vehicle.speed/time_to_intercept
+            logging.debug(f"{self.object_id} planning to STOP neatly because it is getting close to the light")
+            return new_accel - my_current_acceleration
+        elif time_to_intercept <= SAFE_GAP_IN_SECONDS * self.quality.following_distance:
+            logging.debug(f"{self.object_id} planning to STOP because getting close to a red light in time")
+            return -self.my_vehicle.max_acceleration - my_current_acceleration
+        else:
+            logging.debug(f"{self.object_id} planning to GO because nothing else to do")
+            return None
+
     def _to_intercept_loc_parallel(self, loc: tuple):
         cal_distance((self.my_vehicle.x, self.my_vehicle.y, loc[0], loc[1]))
 
@@ -236,13 +272,20 @@ class Driver:
         else:
             return None, min_distance, their_time_to_intercept_rear, their_distance_to_intercept_front
 
-    def plan(self, visible_objects, road_limit, timestep_length):
+    def plan(self, visible_objects, road_limit, timestep_length, lane, traffic_light=Signal()):
         # the default will be trying to get to my desired acceleration
         changes = [self._get_desired_acceleration_change(road_limit, timestep_length)]
+
+        light_change = self._adjust_acceleration_for_traffic_light(lane, traffic_light)
+        if light_change is not None:
+            changes.append(light_change)
         for driver in visible_objects:
             # Check if the driver is perpendicular to you
             if self._check_whether_perpendicular(driver):
-                accel_change = self._adjust_acceleration_for_other_driver_perpendicular(driver)
+                if not traffic_light.controls(lane):
+                    accel_change = self._adjust_acceleration_for_other_driver_perpendicular(driver)
+                else:
+                    accel_change = None
             else:
                 accel_change = self._adjust_acceleration_for_other_driver(driver)
             if accel_change is not None:

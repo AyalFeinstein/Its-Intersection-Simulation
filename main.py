@@ -103,7 +103,7 @@ def main():
                     road_speed_limit = lane.get_speed_limit()
                     if this_driver.should_plan():
                         visible_objects = this_driver.look(global_objects_list)
-                        accel_change = this_driver.plan(visible_objects, road_speed_limit, timestep_length)
+                        accel_change = this_driver.plan(visible_objects, road_speed_limit, timestep_length, lane, traffic_light=global_objects_list.get_light())
                         this_driver.accelerate(accel_change)
                         logging.debug(f"{this_driver.object_id=} acceleration ={this_driver.my_vehicle.acceleration}")
 
