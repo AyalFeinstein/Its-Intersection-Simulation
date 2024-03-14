@@ -99,8 +99,15 @@ class Driver:
                                                 their_closest_y - my_closest_y,
                                                 my_direction_x, my_direction_y)
 
+        # if speed is 0, ignore negative accelerations
+        my_acceleration = self.my_vehicle.acceleration
+        if self.my_vehicle.speed == 0:
+            my_acceleration = max(self.my_vehicle.acceleration, 0)
+        if driver.my_vehicle.speed == 0:
+            his_acceleration_in_direction_of_my_acceleration = max(his_acceleration_in_direction_of_my_acceleration, 0)
+
         time_to_intercept = quadratic_equation(0.5 * (
-                his_acceleration_in_direction_of_my_acceleration - self.my_vehicle.acceleration),
+                his_acceleration_in_direction_of_my_acceleration - my_acceleration),
                                                his_speed_in_direction_of_my_speed - self.my_vehicle.speed,
                                                distance_in_direction_of_my_speed)
 
